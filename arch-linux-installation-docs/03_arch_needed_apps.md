@@ -91,6 +91,11 @@ nvm install 22
 nvm use 22
 node --version
 ```
+### Github SSH Setup
+
+- Follow [this guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) to setup an ssh key for github
+- Follow [this guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account) to add the ssh key to your github account
+
 ### Global Modules 
 
 There are a few global node modules I use a lot:
