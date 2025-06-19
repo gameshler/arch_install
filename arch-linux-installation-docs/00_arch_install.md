@@ -115,7 +115,7 @@ _In the next step it is recommended to install CPU microcode package. Depending 
 
 My pacstrap presents as follows:
 
-	pacstrap /mnt base linux linux-firmware YOUR_UCODE_PACKAGE sudo vim nano lvm2 dracut sbsigntools iwd git efibootmgr binutils networkmanager pacman
+	pacstrap /mnt base linux linux-firmware YOUR_UCODE_PACKAGE sudo vim nano konsole lvm2 dracut sbsigntools iwd git efibootmgr binutils networkmanager pacman
 
 Generate fstab:
 

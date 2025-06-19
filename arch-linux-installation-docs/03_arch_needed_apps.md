@@ -3,7 +3,7 @@
 ## Applications and Packages to Install
 
 ```bash
-sudo pacman -S firefox, libreoffice-fresh, vlc, curl, flatpak, fastfetch, p7zip, unrar, tar, rsync, exfat-utils, fuse-exfat, flac, jdk-openjdk, gimp, steam, vulkan-radeon, lib32-vulkan-radeon, base-devel, kate, mangohud, lib32-mangohud, corectrl, openssh
+sudo pacman -S firefox libreoffice-fresh vlc curl flatpak fastfetch p7zip unrar tar rsync exfat-utils fuse-exfat flac jdk-openjdk gimp steam vulkan-radeon lib32-vulkan-radeon base-devel kate mangohud lib32-mangohud corectrl openssh dolphin telegram-desktop
 ```
 
 ### yay installation:
@@ -12,6 +12,10 @@ sudo pacman -S firefox, libreoffice-fresh, vlc, curl, flatpak, fastfetch, p7zip,
 git clone https://aur.archlinux.org/yay.git
 cd yay
 makepkg -si
+```
+
+```
+yay -S visual-studio-code-bin postman-bin
 ```
 
 ### configuring pacman:
