@@ -15,7 +15,7 @@ makepkg -si
 ```
 
 ```
-yay -S visual-studio-code-bin postman-bin
+yay -S visual-studio-code-bin postman-bin brave-bin
 ```
 
 ### configuring pacman:
