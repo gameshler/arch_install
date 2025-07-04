@@ -30,28 +30,35 @@ Edit the `/etc/nftables.conf`. Proposed firewall rules:
 
 ```
 #!/usr/bin/nft -f
- 
- table inet filter
- delete table inet filter
- table inet filter {
-   chain input {
-     type filter hook input priority filter
-     policy drop
- 
-     ct state invalid drop comment "early drop of invalid connections"
-     ct state {established, related} accept comment "allow tracked connections"
-     iifname lo accept comment "allow from loopback"
-     ip protocol icmp accept comment "allow icmp"
-     meta l4proto ipv6-icmp accept comment "allow icmp v6"
-     pkttype host limit rate 5/second counter reject with icmpx type admin-prohibited
-     counter
-   }
 
-   chain forward {
-     type filter hook forward priority filter
-     policy drop
-   }
- }
+destroy table inet filter
+table inet filter {
+  chain input {
+    type filter hook input priority filter
+    policy drop
+
+    ct state invalid drop comment "early drop of invalid connections"
+    ct state {established, related} accept comment "allow tracked connections"
+    iif lo accept comment "allow from loopback"
+    ip protocol icmp accept comment "allow icmp"
+    meta l4proto ipv6-icmp accept comment "allow icmp v6"
+    meter ssh_conn_limit { ip saddr timeout 30s limit rate 6/minute } counter jump ssh_check
+    tcp dport 22 accept comment "allow SSH"
+    tcp dport 80 accept comment "allow HTTP"
+    tcp dport 443 accept comment "allow HTTPS"
+    pkttype host limit rate 5/second counter reject with icmpx type admin-prohibited
+    counter
+  }
+
+  chain ssh_check {
+    tcp dport 22 counter accept comment "SSH passed brute-force check"
+  }
+
+  chain forward {
+    type filter hook forward priority filter
+    policy drop
+  }
+}
 ```
 
 Enable the nftables service and list loaded rules for confirmation:
