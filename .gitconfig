@@ -1,0 +1,7 @@
+[user]
+name = gameshler
+email = jabrabasel2000@gmail.com
+[core]
+editor = nano
+[init]
+defaultBranch = main
