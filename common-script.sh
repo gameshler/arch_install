@@ -65,5 +65,22 @@ install_packages() {
   fi
 }
 
+check_init_manager() {
+  local candidates="$1"
+  local manager
+
+  for manager in $candidates; do
+    if command_exists "$manager"; then
+      INIT_MANAGER="$manager"
+      printf "%b\n" "Using ${manager} to interact with init system"
+      return 0
+    fi
+  done
+
+  printf "%b\n" "No supported init system found. Exiting."
+  exit 1
+}
+
 checkPackageManager "pacman"
 checkAurHelper
+check_init_manager 'systemctl rc-service sv'
