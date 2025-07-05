@@ -11,7 +11,7 @@ install_packages "$PACKAGER" \
   libreoffice-fresh vlc curl flatpak fastfetch p7zip unrar tar rsync \
   exfat-utils fuse-exfat flac jdk-openjdk gimp steam vulkan-radeon lib32-vulkan-radeon \
   base-devel kate mangohud lib32-mangohud corectrl openssh dolphin \
-  telegram-desktop discord
+  telegram-desktop htop discord
 
 printf "%b\n" "Installing AUR packages with yay"
 install_packages "yay" \
