@@ -3,12 +3,11 @@
 I'm gonna be honest, you probably probably won't find anything groundbreaking here and I'm not gonna act like I've discovered a mother-lode,
 but with this you have the neccessary basics to consider your laptop "secure".
 
-
 **THINGS NOT COVERED HERE:**
 
-* Sandboxing
-* VPN's
-* Secure backup with public cloud
+- Sandboxing
+- VPN's
+- Secure backup with public cloud
 
 ## Firewall
 
@@ -22,11 +21,11 @@ pacman -S nftables
 
 Edit the `/etc/nftables.conf`. Proposed firewall rules:
 
-* drop all forwarding traffic (we're not a router),
-* allow loopback (127.0.0.0)
-* allow ICMP for v4 and v6 (you can turn it off, but for v6 it will dissable [SLAAC](https://wiki.archlinux.org/title/IPv6#Stateless_autoconfiguration_(SLAAC))),
-* allow returning packets for established connections,
-* block all else.
+- drop all forwarding traffic (we're not a router),
+- allow loopback (127.0.0.0)
+- allow ICMP for v4 and v6 (you can turn it off, but for v6 it will dissable [SLAAC](<https://wiki.archlinux.org/title/IPv6#Stateless_autoconfiguration_(SLAAC)>)),
+- allow returning packets for established connections,
+- block all else.
 
 ```
 #!/usr/bin/nft -f

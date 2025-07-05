@@ -10,23 +10,24 @@ Follow these steps to install and run **KDE Plasma** with a **Wayland session** 
 sudo pacman -Syu
 
 ```
+
 ## installing desktop env
 
 ```
-sudo pacman -S plasma 
+sudo pacman -S plasma
 
-note: put everything to default 
+note: put everything to default
 
 ```
 
 ```bash
-# you need a login manager: 
+# you need a login manager:
 
-nano /kde_plasma.sh 
+nano /kde_plasma.sh
 
 #!/bin/bash
 /usr/lib/plasma-dbus-run-session-if-needed /usr/bin/startplasma-wayland
 
 # make it executable
-chmod +x kde_plasma.sh 
+chmod +x kde_plasma.sh
 ```
