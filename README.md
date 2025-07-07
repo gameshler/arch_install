@@ -49,13 +49,13 @@
 
    - Automating Installation with a Script
 
-10. [Applications & Packages](#Applications-&-Packages)
+10. [Applications and Packages](#Applications-and-Packages)
 
     - Essential Applications Installation
     - Yay AUR Helper Setup
     - System Configuration and Tweaks
 
-11. [Additional Tools & Configurations](#Additional-Tools-&-Configuration)
+11. [Additional Tools and Configurations](#Additional-Tools-and-Configuration)
     - CoreCtrl, MangoHud, and Node.js Setup
     - Github SSH Setup and Global Modules
 
@@ -538,7 +538,7 @@ curl -o- https://raw.githubusercontent.com/gameshler/arch_install/setup.sh | bas
 
 ```
 
-## Applications & Packages
+## Applications and Packages
 
 ```bash
 sudo pacman -S firefox libreoffice-fresh vlc curl flatpak fastfetch p7zip unrar tar rsync exfat-utils fuse-exfat flac jdk-openjdk gimp steam vulkan-radeon lib32-vulkan-radeon base-devel kate mangohud lib32-mangohud corectrl openssh dolphin telegram-desktop discord visual-studio-code-bin --needed --noconfirm
@@ -560,7 +560,7 @@ makepkg --noconfirm -si
 yay -S postman-bin brave-bin
 ```
 
-## Additional Tools & Configuration
+## Additional Tools and Configuration
 
 ### configuring pacman:
 
