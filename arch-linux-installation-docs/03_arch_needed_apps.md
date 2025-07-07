@@ -1,5 +1,12 @@
 # Arch Linux Setup Guide
 
+> you can install everything with one script using
+
+```
+curl -o- https://raw.githubusercontent.com/gameshler/arch_install/setup.sh | bash
+
+```
+
 ## Applications and Packages to Install
 
 ```bash

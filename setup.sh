@@ -4,19 +4,11 @@
 
 set -euo pipefail
 
-printf "%b\n" "Updating system and installing core packages"
+printf "%b\n" "Checking System Package Manager and AUR"
+checkPackageManager "pacman"
+check_init_manager 'systemctl rc-service sv'
+checkAurHelper
 sudo pacman -Syu --noconfirm
-
-install_packages "$PACKAGER" \
-  libreoffice-fresh vlc curl flatpak fastfetch p7zip unrar tar rsync \
-  exfat-utils fuse-exfat flac jdk-openjdk gimp steam vulkan-radeon lib32-vulkan-radeon \
-  base-devel kate mangohud lib32-mangohud corectrl openssh dolphin \
-  telegram-desktop htop discord
-
-printf "%b\n" "Installing AUR packages with yay"
-install_packages "yay" \
-  postman-bin brave-bin visual-studio-code-bin
-
 # pacman config
 printf "%b\n" "Configuring pacman"
 sudo sed -i -E \
@@ -34,6 +26,16 @@ if ! grep -q "^ILoveCandy" /etc/pacman.conf; then
 fi
 
 sudo pacman -Syyu --noconfirm
+printf "%b\n" "Installing packages"
+install_packages "$PACKAGER" \
+  libreoffice-fresh vlc curl flatpak fastfetch p7zip unrar tar rsync \
+  exfat-utils fuse-exfat flac jdk-openjdk gimp vulkan-radeon lib32-vulkan-radeon \
+  base-devel kate mangohud lib32-mangohud corectrl openssh dolphin \
+  telegram-desktop htop discord steam
+
+printf "%b\n" "Installing AUR packages with yay"
+install_packages "yay" \
+  postman-bin brave-bin visual-studio-code-bin
 
 # corectrl autostart setup
 printf "%b\n" "Setting up corectrl autostart"
@@ -88,6 +90,7 @@ node --version
 printf "%b\n" "Installing pnpm and global node modules"
 curl -fsSL https://get.pnpm.io/install.sh | sh -
 pnpm add -g license gitignore
+source $HOME/.bashrc || true
 
 # Dotfiles array
 dotfiles=(.gitignore .gitconfig .bashrc)
