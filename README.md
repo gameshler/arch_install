@@ -534,7 +534,7 @@ chmod +x kde_plasma.sh
 > you can install everything with one script using
 
 ```
-curl -o- https://raw.githubusercontent.com/gameshler/arch_install/setup.sh | bash
+curl -o- https://raw.githubusercontent.com/gameshler/arch_install/main/setup.sh | bash
 
 ```
 
