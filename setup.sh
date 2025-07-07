@@ -7,7 +7,7 @@ set -euo pipefail
 printf "%b\n" "Checking System Package Manager and AUR"
 checkPackageManager "pacman"
 check_init_manager 'systemctl rc-service sv'
-checkAurHelper
+
 sudo pacman -Syu --noconfirm
 # pacman config
 printf "%b\n" "Configuring pacman"
@@ -32,7 +32,7 @@ install_packages "$PACKAGER" \
   exfat-utils fuse-exfat flac jdk-openjdk gimp vulkan-radeon lib32-vulkan-radeon \
   base-devel kate mangohud lib32-mangohud corectrl openssh dolphin \
   telegram-desktop htop discord steam
-
+checkAurHelper
 printf "%b\n" "Installing AUR packages with yay"
 install_packages "yay" \
   postman-bin brave-bin visual-studio-code-bin
@@ -44,7 +44,7 @@ cp /usr/share/applications/org.corectrl.CoreCtrl.desktop ~/.config/autostart/org
 
 # mangohud config
 printf "%b\n" "Configuring MangoHud"
-cp /usr/share/doc/mangohud/MangoHud.conf.example ~/.config/MangoHud/MangoHud.conf || true
+mkdir -p "$HOME/.config/MangoHud" && cp /usr/share/doc/mangohud/MangoHud.conf.example $HOME/.config/MangoHud/MangoHud.conf || true
 config_file="$HOME/.config/MangoHud/MangoHud.conf"
 
 # Settings you want to enable
@@ -109,3 +109,4 @@ done
 source ~/.bashrc || true
 
 printf "%b\n" "Setup completed successfully!"
+# fix pnpm sourcing and make sure to import every dotfile and fix docs
