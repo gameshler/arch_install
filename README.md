@@ -1,3 +1,64 @@
+# Arch Install
+
+## Table of Contents
+
+1. [Introduction](#Introduction)
+
+   - Pre-requisites & Checklist
+   - Preparing the USB and Booting the Installer
+
+2. [Disk Partitioning](#Disk-Partitioning)
+
+   - Wiping and Partitioning the Drive
+   - Creating Encrypted Volume and LVM Setup
+   - Mounting the Partitions
+
+3. [System Bootstrapping](#System-Bootstraping)
+
+   - Pacman Setup and System Base Installation
+   - Basic Configuration (Timezone, Locale, User Creation, etc.)
+
+4. [Unified Kernel Image (UKI) Setup](#Unified-Kernel-Image)
+
+   - Dracut Setup and Pacman Hooks
+   - Generating the Unified Kernel Image
+   - UEFI Boot Entry Configuration
+
+5. [SecureBoot Configuration](#SecureBoot-Configuration)
+
+   - Enabling SecureBoot in BIOS
+   - Signing EFI Binaries with `sbctl`
+   - SecureBoot Key Enrollment
+
+6. [Firewall Configuration](#Firewall-Configuration)
+
+   - Installing and Configuring `nftables`
+   - Configuring Kernel Network Parameters
+
+7. [Password Manager](#Password-Manager)
+
+   - Installing KeePassXC for Password Management
+
+8. [KDE Plasma Installation on Arch Linux](#KDE-Plasma-Installation)
+
+   - Installing KDE Plasma Desktop Environment
+   - Wayland Session Setup
+   - Creating Custom Login Manager Script
+
+9. [Arch Linux Setup Guide](#Arch-Linux-Setup-Guide)
+
+   - Automating Installation with a Script
+
+10. [Applications & Packages](#Applications-&-Packages)
+
+    - Essential Applications Installation
+    - Yay AUR Helper Setup
+    - System Configuration and Tweaks
+
+11. [Additional Tools & Configurations](#Additional-Tools-&-Configuration)
+    - CoreCtrl, MangoHud, and Node.js Setup
+    - Github SSH Setup and Global Modules
+
 # Introduction
 
 This section of guide will tell you how to install fully encrypted base system with SecureBoot enabled. This specific guide uses Unified Boot Image for booting and therefore there is no need for software like GRUB.
@@ -24,7 +85,7 @@ When your installer has booted, especially on laptop, you may want to enable WiF
     <password prompt>
     exit
 
-## Disk partitioning
+## Disk Partitioning
 
 Following example assumes you have a nvme drive. Your drive may as well report as /dev/sdX.
 
@@ -104,7 +165,7 @@ mount -a
 sudo chown -R $USER:$USER /mnt/storage # you can use `whoami` to check your system name
 ```
 
-## System bootstraping
+## System Bootstraping
 
 It seems pacman now requires PGP shenaningans, so first of all I had to execute:
 
@@ -171,10 +232,12 @@ Add your user to sudo:
 
 Enable some basic systemd units:
 
-systemctl enable NetworkManager # Letter case is important !!!!!!
-systemctl enable fstrim.timer
+```
+ systemctl enable NetworkManager # Letter case is important !!!!!!
+ systemctl enable fstrim.timer
+```
 
-## Creating Unified Kernel Image and configuring boot entry
+## Unified Kernel Image
 
 Create dracut scripts that will hook into pacman:
 
@@ -203,8 +266,7 @@ And the removal script:
 Make those scripts executable and create pacman's hook directory:
 
     chmod +x /usr/local/bin/dracut-*
-
-mkdir /etc/pacman.d/hooks
+    mkdir /etc/pacman.d/hooks
 
 Now the actual hooks, first for the install and upgrade:
 
@@ -257,12 +319,13 @@ Generate your image by re-installing `linux` package and making sure the hooks w
 
     pacman -S linux
 
-You should have `bootx64.efi` within your `/efi/EFI/Linux/`
-note: you can check for bootx64.efi to make sure its setup correctly ls -alh /boot/efi/EFI/Linux
+> You should have `bootx64.efi` within your `/efi/EFI/Linux/`
+> note: you can check for bootx64.efi to make sure its setup correctly ls -alh /boot/efi/EFI/Linux
 
 Now you only have to add UEFI boot entry and create an order of booting:
 
     efibootmgr --create --disk /dev/nvme0n1 --part 1 --label "Arch Linux" --loader 'EFI\Linux\bootx64.efi' --unicode
+
     efibootmgr 		# Check if you have left over UEFI entries, remove them with efibootmgr -b INDEX -B and note down Arch index
     efibootmgr -o ARCH_INDEX_FROM_PREVIOUS_COMMAND # 0 or whatever number your Arch entry shows as
 
@@ -272,7 +335,7 @@ Now you can reboot and log into your system.
 
 Some (older?) platforms can ignore entries by efibootmgr all together and just look for `EFI\BOOT\bootx64.efi`, in that case you may generate your UKI directly to that directory and under that name. It's very important that the name is also `bootx64.efi`.
 
-## SecureBoot
+## SecureBoot Configuration
 
 At this point you should enable Setup Mode for SecureBoot in your BIOS, and erase your existing keys (it may spare you setting attributes for efi vars in OS). If your system does not offer reverting to default keys (useful if you want to install windows later), you should backup them, though this will not be described here.
 
@@ -330,3 +393,273 @@ Reboot the system. Enable only UEFI boot in BIOS and set BIOS password so evil m
       Owner GUID:	YOUR_GUID
       Setup Mode:	✓ Disabled
       Secure Boot:	✓ Enabled
+
+## Firewall Configuration
+
+I'm goning to use nftables. Most distros started switching to it and it streamlines persistence compared to iptables.
+
+Install nftables:
+
+```
+pacman -S nftables
+```
+
+Edit the `/etc/nftables.conf`. Proposed firewall rules:
+
+- drop all forwarding traffic (we're not a router),
+- allow loopback (127.0.0.0)
+- allow ICMP for v4 and v6 (you can turn it off, but for v6 it will dissable [SLAAC](<https://wiki.archlinux.org/title/IPv6#Stateless_autoconfiguration_(SLAAC)>)),
+- allow returning packets for established connections,
+- ssh protection
+- block all else.
+
+```
+#!/usr/bin/nft -f
+
+destroy table inet filter
+table inet filter {
+  chain input {
+    type filter hook input priority filter
+    policy drop
+
+    ct state invalid drop comment "early drop of invalid connections"
+    ct state {established, related} accept comment "allow tracked connections"
+    iif lo accept comment "allow from loopback"
+    ip protocol icmp accept comment "allow icmp"
+    meta l4proto ipv6-icmp accept comment "allow icmp v6"
+    meter ssh_conn_limit { ip saddr timeout 30s limit rate 6/minute } counter jump ssh_check
+    tcp dport 22 accept comment "allow SSH"
+    tcp dport 80 accept comment "allow HTTP"
+    tcp dport 443 accept comment "allow HTTPS"
+    pkttype host limit rate 5/second counter reject with icmpx type admin-prohibited
+    counter
+  }
+
+  chain ssh_check {
+    tcp dport 22 counter accept comment "SSH passed brute-force check"
+  }
+
+  chain forward {
+    type filter hook forward priority filter
+    policy drop
+  }
+}
+```
+
+Enable the nftables service and list loaded rules for confirmation:
+
+```
+systemctl enable --now nftables
+
+nft list ruleset
+```
+
+## Kernel parameters
+
+Since firewall allows ICMP traffic, it may be a good idea to disable some network options. Edit your `/etc/sysctl.d/90-network.conf`:
+
+```
+# Do not act as a router
+net.ipv4.ip_forward = 0
+net.ipv6.conf.all.forwarding = 0
+
+# SYN flood protection
+net.ipv4.tcp_syncookies = 1
+
+# Disable ICMP redirect
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv4.conf.all.secure_redirects = 0
+net.ipv4.conf.default.secure_redirects = 0
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+
+# Do not send ICMP redirects
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+```
+
+Load your new rules with:
+
+```
+sysctl --system
+```
+
+## Password Manager
+
+My preffered solution is KeePass with their .kdbx format, that can be opened by multitude of programs and solutions.
+
+For arch you can install local client, KeePassXC:
+
+```
+pacman -S keepassxc
+```
+
+# KDE Plasma Installation
+
+Follow these steps to install and run **KDE Plasma** with a **Wayland session** on Arch Linux. This guide assumes `sudo` privileges and a clean system.
+
+---
+
+## Full System Update
+
+```
+sudo pacman -Syu
+
+```
+
+## installing desktop env
+
+```
+sudo pacman -S plasma
+
+note: put everything to default
+
+```
+
+```bash
+# you need a login manager:
+
+nano /kde_plasma.sh
+
+#!/bin/bash
+/usr/lib/plasma-dbus-run-session-if-needed /usr/bin/startplasma-wayland
+
+# make it executable
+chmod +x kde_plasma.sh
+```
+
+# Arch Linux Setup Guide
+
+> you can install everything with one script using
+
+```
+curl -o- https://raw.githubusercontent.com/gameshler/arch_install/setup.sh | bash
+
+```
+
+## Applications & Packages
+
+```bash
+sudo pacman -S firefox libreoffice-fresh vlc curl flatpak fastfetch p7zip unrar tar rsync exfat-utils fuse-exfat flac jdk-openjdk gimp steam vulkan-radeon lib32-vulkan-radeon base-devel kate mangohud lib32-mangohud corectrl openssh dolphin telegram-desktop discord visual-studio-code-bin --needed --noconfirm
+```
+
+### yay installation:
+
+> `mkdir opt` if you dont have it
+
+```
+cd /opt
+git clone https://aur.archlinux.org/yay-bin.git
+sudo chown -R "$USER": ./yay-bin
+cd yay-bin
+makepkg --noconfirm -si
+```
+
+```
+yay -S postman-bin brave-bin
+```
+
+## Additional Tools & Configuration
+
+### configuring pacman:
+
+```
+sudo nano /etc/pacman.conf
+```
+
+- remove # from:
+  - Color
+  - ParallelDownloadds
+- Add the following line for visual pacman
+
+```
+ILoveCandy
+```
+
+Update the config:
+
+```
+sudo pacman -Sy
+```
+
+#### enabling multilib:
+
+uncomment the following lines:
+
+```
+[multilib]
+Include = /etc/pacman.d/mirrorlist
+
+```
+
+Then update:
+
+```
+sudo pacman -Syyu
+```
+
+### corectrl (optional):
+
+More info: [corectrl Wiki](https://gitlab.com/corectrl/corectrl/-/wikis/Setup)
+
+Enable corectrl at startup:
+
+```
+cp /usr/share/applications/org.corectrl.CoreCtrl.desktop ~/.config/autostart/org.corectrl.CoreCtrl.desktop
+```
+
+> note: if the command above isnt working you need to make a new file for auto starting:
+
+```
+mkdir ~/.config/autostart # then run the above command
+```
+
+### mangohud configuration:
+
+```
+cp /usr/share/doc/mangohud/MangoHud.conf.example ~/.config/MangoHud/MangoHud.conf
+
+```
+
+> Edit ~/.config/MangoHud/MangoHud.conf to suit your preferences.
+
+### Nodejs
+
+I use nvm to manage the installed versions of Node.js on my machine. This allows me to easily switch between Node.js versions depending on the project I'm working in.
+
+See installation instructions [here](https://github.com/nvm-sh/nvm#installing-and-updating).
+
+OR run this command (make sure v0.40.3 is still the latest)
+
+```
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+```
+
+Now that nvm is installed, you can install a specific version of node.js and use it:
+
+```
+nvm install 22
+nvm use 22
+node --version
+```
+
+### Github SSH Setup
+
+- Follow [this guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent) to setup an ssh key for github
+- Follow [this guide](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account) to add the ssh key to your github account
+
+### Global Modules
+
+There are a few global node modules I use a lot:
+
+> install in your development directory
+
+- license
+  - Auto generate open source license files
+- gitignore
+  - Auto generate `.gitignore` files base on the current project type
+
+```
+pnpm install -g license gitignore
+```
