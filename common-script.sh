@@ -80,7 +80,3 @@ check_init_manager() {
   printf "%b\n" "No supported init system found. Exiting."
   exit 1
 }
-
-checkPackageManager "pacman"
-checkAurHelper
-check_init_manager 'systemctl rc-service sv'

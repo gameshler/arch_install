@@ -39,8 +39,8 @@ install_packages "yay" \
 
 # corectrl autostart setup
 printf "%b\n" "Setting up corectrl autostart"
-mkdir -p ~/.config/autostart
-cp /usr/share/applications/org.corectrl.CoreCtrl.desktop ~/.config/autostart/org.corectrl.CoreCtrl.desktop || true
+mkdir -p $HOME/.config/autostart
+cp /usr/share/applications/org.corectrl.CoreCtrl.desktop $HOME/.config/autostart/org.corectrl.CoreCtrl.desktop || true
 
 # mangohud config
 printf "%b\n" "Configuring MangoHud"
@@ -89,8 +89,8 @@ node --version
 # pnpm global tools
 printf "%b\n" "Installing pnpm and global node modules"
 curl -fsSL https://get.pnpm.io/install.sh | sh -
-pnpm add -g license gitignore
 source $HOME/.bashrc || true
+pnpm add -g license gitignore
 
 # Dotfiles array
 dotfiles=(.gitignore .gitconfig .bashrc)
@@ -106,7 +106,10 @@ for dotfile in "${dotfiles[@]}"; do
 done
 
 # Source .bashrc to apply changes
-source ~/.bashrc || true
+source $HOME/.bashrc || true
+
+printf "%b\n" "Mounting Drives..."
+
+./auto-mount.sh
 
 printf "%b\n" "Setup completed successfully!"
-# fix pnpm sourcing and make sure to import every dotfile and fix docs
