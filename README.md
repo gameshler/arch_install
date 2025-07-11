@@ -61,7 +61,7 @@
 
 # Introduction
 
-This section of guide will tell you how to install fully encrypted base system with SecureBoot enabled. This specific guide uses Unified Boot Image for booting and therefore there is no need for software like GRUB.
+A walkthrough installation guide for a secure arch linux based system.
 
 **Check this list before starting!**
 
@@ -137,7 +137,7 @@ After all is done we need to mount our drives:
     mkdir -p /mnt/boot/efi
     mount /dev/nvme0n1p1 /mnt/boot/efi
 
-If you have more than one drive:
+> If you have more than one drive you can use `automount.sh`, make sure to gdisk before using it:
 
 > you can use `wipefs` and `gdisk` if needed and make sure they are setup as default (if the drive has data dont use neither wipefs nor gdisk)
 
@@ -150,6 +150,10 @@ Editing /etc/fstab later to assign uuid's (use `blkid /mnt/storage` to get the u
 ```
 UUID=YOUR_UUID   /mnt/storage    ntfs-3g or ext4       defaults,noatime 0 2
 
+```
+
+```
+blkid -s UUID -o value /dev/nvme0n1p1 >> /etc/fstab
 ```
 
 load the `/etc/fstab`:
@@ -207,7 +211,7 @@ Set your desired locale:
     vim /etc/locale.conf
     	LANG=en_GB.UTF-8
 
-Configure your keyboard layout (mine is adapted to polish-programmer keyboard):
+Configure your keyboard layout:
 
     vim /etc/vconsole.conf
     	KEYMAP=us
