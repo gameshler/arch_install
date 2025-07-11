@@ -365,12 +365,11 @@ net.ipv4.conf.default.send_redirects = 0
 SYSCTL
 
   sysctl --system
+  sudo pacman -Syu
 }
 install_kde() {
-  read -rp "Install KDE Plasma? (y/N): " choice
-  [[ "$choice" =~ ^[Yy]$ ]] || return
 
-  pacman -S --noconfirm plasma plasma-wayland-session sddm
+  pacman -S --noconfirm plasma sddm
 
   cat >/usr/local/bin/startplasma-wayland <<'SCRIPT'
 #!/bin/bash
