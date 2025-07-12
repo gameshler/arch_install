@@ -85,6 +85,12 @@ When your installer has booted, especially on laptop, you may want to enable WiF
     <password prompt>
     exit
 
+> you can install everything with one script using
+
+```
+curl -fsSL https://raw.githubusercontent.com/gameshler/arch_install/main/arch-install.sh | bash
+```
+
 ## Disk Partitioning
 
 Following example assumes you have a nvme drive. Your drive may as well report as /dev/sdX.
