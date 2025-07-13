@@ -398,6 +398,8 @@ main() {
   clear
   select_disk
   clear
+  pacman -Sy
+  clear
   partition_disk
   clear
   setup_luks_lvm
