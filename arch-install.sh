@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -euo pipefail
-
 background_checks() {
   # Check Arch environment
   [[ ! -f /usr/bin/pacstrap ]] && echo "Run from Arch ISO!" && exit 1
@@ -110,11 +108,11 @@ select_disk() {
 }
 
 partition_disk() {
-  wipefs -fa "$DISK"
-  sgdisk -Z "$DISK"
+  wipefs -fa "${DISK}"
+  sgdisk -Z "${DISK}"
   sgdisk -a 2048 -o "${DISK}"
-  sgdisk -n 1::+1G -t 1:ef00 -c 1:"EFI" "$DISK"
-  sgdisk -n 2:: -t 2:8309 -c 2:"LUKS" "$DISK"
+  sgdisk -n 1::+1G --typecode=1:ef00 --change-name=1:"EFI" "${DISK}"
+  sgdisk -n 2:: --typecode=2:8309 --change-name=2:"LUKS" "${DISK}"
   partprobe "${DISK}"
   if [[ "$DISK" =~ "nvme" ]]; then
     export EFI_PART="${DISK}p1"
@@ -273,7 +271,7 @@ configure_bootloader() {
         efibootmgr -b \$entry -B
     done
     
-    efibootmgr --create --disk $DISK --part 1 --label "Arch Linux" --loader 'EFI\Linux\bootx64.efi' --unicode
+    efibootmgr --create --disk ${DISK} --part 1 --label "Arch Linux" --loader 'EFI\Linux\bootx64.efi' --unicode
     
     efibootmgr
 EOF
