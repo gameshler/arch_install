@@ -151,7 +151,7 @@ configure_fstab() {
 }
 
 configure_system() {
-  arch-chroot /mnt /bin/bash <<EOF
+  arch-chroot /mnt /bin/bash -c "KEYMAP='${KEYMAP}' /bin/bash" <<EOF
 # Time/Locale
 ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
 hwclock --systohc
@@ -386,6 +386,8 @@ main() {
 
   background_checks
   clear
+  get_userinfo
+  clear
   select_disk
   clear
   partition_disk
@@ -394,10 +396,6 @@ main() {
   clear
   format_filesystem
   clear
-  base_install
-  clear
-  configure_fstab
-  clear
   # Configuration
   echo "=== Configuring System ==="
   echo "Please enter your desired timezone e.g. Europe/London :"
@@ -405,6 +403,9 @@ main() {
   echo "${new_timezone} set as timezone"
   export TIMEZONE=$new_timezone
   export KEYMAP="us"
+  base_install
+  clear
+  configure_fstab
   clear
   get_userinfo
   clear
