@@ -1,14 +1,17 @@
 #!/bin/bash
 
+exec > >(tee -i archsetup.txt)
+exec 2>&1
+
 background_checks() {
   # Check Arch environment
   [[ ! -f /usr/bin/pacstrap ]] && echo "Run from Arch ISO!" && exit 1
   # Check root
-  [[ "$(id -u)" != "0" ]] && echo "ERROR! Run as root!" && exit 0
+  [[ "$(id -u)" != "0" ]] && echo "ERROR! Run as root!" && exit 1
   # Check Arch
-  [[ ! -e /etc/arch-release ]] && echo "This script must be run in Arch Linux!" && exit 0
+  [[ ! -e /etc/arch-release ]] && echo "This script must be run in Arch Linux!" && exit 1
   # Check pacman lock
-  [[ -f /var/lib/pacman/db.lck ]] && echo "Pacman locked! Remove /var/lib/pacman/db.lck" && exit 0
+  [[ -f /var/lib/pacman/db.lck ]] && echo "Pacman locked! Remove /var/lib/pacman/db.lck" && exit 1
 }
 
 select_option() {
@@ -76,7 +79,7 @@ set_password() {
       echo -ne "ERROR! Passwords do not match. \n"
     fi
   done
-  export PASSWORD=$PASSWORD1
+  export "$1=$PASSWORD1"
 }
 
 get_userinfo() {
@@ -89,7 +92,7 @@ get_userinfo() {
   done
   export USERNAME=$username
 
-  set_password "USER_PASSWORD"
+  set_password USER_PASSWORD
 
   while true; do
     read -r -p "Please name your machine: " hostname
@@ -108,12 +111,15 @@ select_disk() {
 }
 
 partition_disk() {
+  pacman -S --noconfirm --needed gptfdisk
+  umount -A --recursive /mnt
   wipefs -fa "${DISK}"
   sgdisk -Z "${DISK}"
   sgdisk -a 2048 -o "${DISK}"
   sgdisk -n 1::+1G --typecode=1:ef00 --change-name=1:"EFI" "${DISK}"
   sgdisk -n 2:: --typecode=2:8309 --change-name=2:"LUKS" "${DISK}"
   partprobe "${DISK}"
+  sleep 2
   if [[ "$DISK" =~ "nvme" ]]; then
     export EFI_PART="${DISK}p1"
     export LUKS_PART="${DISK}p2"
@@ -124,8 +130,7 @@ partition_disk() {
 }
 setup_luks_lvm() {
   mkfs.fat -F32 "$EFI_PART"
-  set_password "LUKS_PASSWORD"
-  export LUKS_PASSWORD="$LUKS_PASSWORD"
+  set_password LUKS_PASSWORD
   echo -n "$LUKS_PASSWORD" | cryptsetup luksFormat --type luks2 "$LUKS_PART"
   echo -n "$LUKS_PASSWORD" | cryptsetup open --allow-discards --persistent "$LUKS_PART" cryptlvm
   pvcreate /dev/mapper/cryptlvm
@@ -148,6 +153,7 @@ base_install() {
 }
 configure_fstab() {
   genfstab -U /mnt >>/mnt/etc/fstab
+  cat /mnt/etc/fstab
 }
 
 configure_system() {
@@ -406,8 +412,6 @@ main() {
   base_install
   clear
   configure_fstab
-  clear
-  get_userinfo
   clear
   configure_system
   clear
