@@ -155,6 +155,9 @@ base_install() {
 }
 configure_fstab() {
   genfstab -U /mnt >>/mnt/etc/fstab
+  echo "
+  Generated /etc/fstab:
+"
   cat /mnt/etc/fstab
 }
 
@@ -269,7 +272,7 @@ CMD_CONF
 compress="zstd"
 hostonly="no"
 FLAGS_CONF
-  pacman -S linux --noconfirm
+  pacman -S linux
 
 }
 
