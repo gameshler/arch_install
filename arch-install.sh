@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -euo pipefail
+
 background_checks() {
   # Check Arch environment
   [[ ! -f /usr/bin/pacstrap ]] && echo "Run from Arch ISO!" && exit 1
@@ -167,7 +169,7 @@ echo "$HOSTNAME" > /etc/hostname
 # Set root password 
 echo "Setting root password:"
 passwd
-
+pacman -Syu man-db
 # Create user 
 useradd -m -G wheel -s /bin/bash "$USERNAME"
 echo "Setting password for $USERNAME:"
@@ -251,7 +253,7 @@ INSTALL_HOOK
 	Exec = /usr/local/bin/dracut-remove.sh
 	NeedsTargets
 REMOVE_HOOK
-
+  mkdir -p /etc/dracut.conf.d
   local LUKS_UUID=$(blkid -s UUID -o value "$LUKS_PART")
   cat >/etc/dracut.conf.d/cmdline.conf <<CMD_CONF
 kernel_cmdline="rd.luks.uuid=luks-$LUKS_UUID rd.lvm.lv=vg/root root=/dev/mapper/vg-root rootfstype=ext4 rootflags=rw,relatime"
@@ -278,7 +280,7 @@ EOF
 }
 configure_secureboot() {
   /bin/bash <<EOF
-    pacman -S --noconfirm sbctl
+    pacman -S sbctl --noconfirm 
     sbctl create-keys
     sbctl sign -s /boot/efi/EFI/Linux/bootx64.efi
     
@@ -365,7 +367,7 @@ net.ipv4.conf.default.send_redirects = 0
 SYSCTL
 
   sysctl --system
-  sudo pacman -Syu
+  pacman -Syu
 }
 install_kde() {
 
