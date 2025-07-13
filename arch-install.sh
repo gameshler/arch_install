@@ -109,7 +109,9 @@ select_disk() {
   select_option "${options[@]}"
   export DISK="${options[$?]%|*}"
 }
-
+if [ ! -d "/mnt" ]; then
+  mkdir /mnt
+fi
 partition_disk() {
   pacman -S --noconfirm --needed gptfdisk
   umount -A --recursive /mnt
@@ -120,7 +122,7 @@ partition_disk() {
   sgdisk -n 2:: --typecode=2:8309 --change-name=2:"LUKS" "${DISK}"
   partprobe "${DISK}"
   sleep 2
-  if [[ "$DISK" =~ "nvme" ]]; then
+  if [[ "${DISK}" =~ "nvme" ]]; then
     export EFI_PART="${DISK}p1"
     export LUKS_PART="${DISK}p2"
   else
@@ -129,10 +131,10 @@ partition_disk() {
   fi
 }
 setup_luks_lvm() {
-  mkfs.fat -F32 "$EFI_PART"
+  mkfs.fat -F32 "${EFI_PART}"
   set_password LUKS_PASSWORD
-  echo -n "$LUKS_PASSWORD" | cryptsetup luksFormat --type luks2 "$LUKS_PART"
-  echo -n "$LUKS_PASSWORD" | cryptsetup open --allow-discards --persistent "$LUKS_PART" cryptlvm
+  echo -n "${LUKS_PASSWORD}" | cryptsetup luksFormat --type luks2 "${LUKS_PART}"
+  echo -n "${LUKS_PASSWORD}" | cryptsetup open --allow-discards --persistent "${LUKS_PART}" cryptlvm
   pvcreate /dev/mapper/cryptlvm
   vgcreate vg /dev/mapper/cryptlvm
   lvcreate -l 100%FREE vg -n root
@@ -141,7 +143,7 @@ format_filesystem() {
   mkfs.ext4 /dev/vg/root
   mount /dev/vg/root /mnt
   mkdir -p /mnt/boot/efi
-  mount "$EFI_PART" /mnt/boot/efi
+  mount "${EFI_PART}" /mnt/boot/efi
 }
 
 base_install() {
@@ -159,12 +161,12 @@ configure_fstab() {
 configure_system() {
   arch-chroot /mnt /bin/bash -c "KEYMAP='${KEYMAP}' /bin/bash" <<EOF
 # Time/Locale
-ln -sf /usr/share/zoneinfo/$TIMEZONE /etc/localtime
+ln -sf /usr/share/zoneinfo/"${TIMEZONE}" /etc/localtime
 hwclock --systohc
 sed -i 's/^#en_GB.UTF-8/en_GB.UTF-8/' /etc/locale.gen
 locale-gen
 echo "LANG=en_GB.UTF-8" > /etc/locale.conf
-echo "KEYMAP=$KEYMAP" > /etc/vconsole.conf
+echo "KEYMAP=${KEYMAP}" > /etc/vconsole.conf
 
 # Hostname
 echo "$HOSTNAME" > /etc/hostname
@@ -258,9 +260,9 @@ INSTALL_HOOK
 	NeedsTargets
 REMOVE_HOOK
   mkdir -p /etc/dracut.conf.d
-  local LUKS_UUID=$(blkid -s UUID -o value "$LUKS_PART")
+  local LUKS_UUID=$(blkid -s UUID -o value "${LUKS_PART}")
   cat >/etc/dracut.conf.d/cmdline.conf <<CMD_CONF
-kernel_cmdline="rd.luks.uuid=luks-$LUKS_UUID rd.lvm.lv=vg/root root=/dev/mapper/vg-root rootfstype=ext4 rootflags=rw,relatime"
+kernel_cmdline="rd.luks.uuid=luks-"${LUKS_UUID}" rd.lvm.lv=vg/root root=/dev/mapper/vg-root rootfstype=ext4 rootflags=rw,relatime"
 CMD_CONF
 
   cat >/etc/dracut.conf.d/flags.conf <<FLAGS_CONF
@@ -408,6 +410,8 @@ main() {
   read -r new_timezone
   echo "${new_timezone} set as timezone"
   export TIMEZONE=$new_timezone
+  pacman -Sy
+  pacman -S --noconfirm archlinux-keyring
   export KEYMAP="us"
   base_install
   clear
