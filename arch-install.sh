@@ -207,12 +207,29 @@ fi
 pacman -S --noconfirm --needed gptfdisk
 umount -A --recursive /mnt
 wipefs -fa "${DISK}"
+sync
+# Create fresh GPT table
 sgdisk -Z "${DISK}"
-sgdisk -a 2048 -o "${DISK}"
-sgdisk -n 1::+1G --typecode=1:ef00 --change-name=1:"EFI" "${DISK}"
-sgdisk -n 2::-0 --typecode=2:8309 --change-name=2:"ROOT" "${DISK}"
+sync
 partprobe "${DISK}"
-sleep 5
+sleep 2
+# Create partitions
+sgdisk -a 2048 -o "${DISK}"
+sync
+partprobe "${DISK}"
+sleep 2
+sgdisk -n 1::+2G --typecode=1:ef00 --change-name=1:"EFI" "${DISK}"
+sync
+partprobe "${DISK}"
+sleep 2
+sgdisk -n 2::-0 --typecode=2:8309 --change-name=2:"ROOT" "${DISK}"
+sync
+partprobe "${DISK}"
+sleep 3
+echo "Verifying partition table:"
+sgdisk -p "${DISK}"
+lsblk -f "${DISK}"
+sleep 3
 createsubvolumes() {
   btrfs subvolume create /mnt/@
   btrfs subvolume create /mnt/@home
