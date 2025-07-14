@@ -67,6 +67,18 @@ select_option() {
 
   return $selected
 }
+set_password() {
+  read -rs -p "Please enter password: " PASSWORD1
+  echo -ne "\n"
+  read -rs -p "Please re-enter password: " PASSWORD2
+  echo -ne "\n"
+  if [[ "$PASSWORD1" == "$PASSWORD2" ]]; then
+    break
+  else
+    echo -ne "ERROR! Passwords do not match. \n"
+  fi
+  export PASSWORD=$PASSWORD1
+}
 filesystem() {
   echo -ne "
     Please Select your file system for both boot and root
@@ -154,19 +166,6 @@ userinfo() {
     echo "Incorrect username."
   done
   export USERNAME=$username
-
-  while true; do
-    read -rs -p "Please enter password: " PASSWORD1
-    echo -ne "\n"
-    read -rs -p "Please re-enter password: " PASSWORD2
-    echo -ne "\n"
-    if [[ "$PASSWORD1" == "$PASSWORD2" ]]; then
-      break
-    else
-      echo -ne "ERROR! Passwords do not match. \n"
-    fi
-  done
-  export PASSWORD=$PASSWORD1
 
   # Loop through user input until the user gives a valid hostname, but allow the user to force save
   while true; do
@@ -275,6 +274,7 @@ elif [[ "${FS}" == "ext4" ]]; then
 elif [[ "${FS}" == "luks" ]]; then
   mkfs.fat -F32 "${partition1}"
   # enter luks password to cryptsetup and format root partition
+  set_password "LUKS_PASSWORD"
   echo -n "${LUKS_PASSWORD}" | cryptsetup -y -v luksFormat --type luks2 "${partition2}" -
   # open luks container and ROOT will be place holder
   echo -n "${LUKS_PASSWORD}" | cryptsetup open --allow-discards --persistent "${partition2}" ROOT -
