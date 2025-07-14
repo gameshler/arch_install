@@ -199,11 +199,7 @@ keymap
 pacman -Sy
 pacman -S --noconfirm archlinux-keyring
 sed -i 's/^#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
-if [ ! -d "/mnt" ]; then
-  mkdir /mnt
-fi
 
-pacman -S --noconfirm --needed gptfdisk
 umount -A --recursive /mnt
 wipefs -fa "${DISK}"
 sync
