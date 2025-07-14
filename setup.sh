@@ -8,34 +8,6 @@ printf "%b\n" "Checking System Package Manager and AUR"
 checkPackageManager "pacman"
 check_init_manager 'systemctl rc-service sv'
 
-/bin/bash <<EOF
-
-    pacman -S sbctl --noconfirm 
-    sbctl create-keys
-    sbctl sign -s /boot/efi/EFI/Linux/bootx64.efi
-    
-    echo 'uefi_secureboot_cert="/var/lib/sbctl/keys/db/db.pem"' > /etc/dracut.conf.d/secureboot.conf
-    echo 'uefi_secureboot_key="/var/lib/sbctl/keys/db/db.key"' >> /etc/dracut.conf.d/secureboot.conf
-    cat >/etc/pacman.d/hooks/zz-sbctl.hook <<'HOOK'
-  [Trigger]
-	Type = Path
-	Operation = Install
-	Operation = Upgrade
-	Operation = Remove
-	Target = boot/*
-	Target = efi/*
-	Target = usr/lib/modules/*/vmlinuz
-	Target = usr/lib/initcpio/*
-	Target = usr/lib/**/efi/*.efi*
-
-	[Action]
-	Description = Signing EFI binaries...
-	When = PostTransaction
-	Exec = /usr/bin/sbctl sign /boot/efi/EFI/Linux/bootx64.efi
-HOOK
-    # Enroll keys with Microsoft keys included
-    sbctl enroll-keys --microsoft
-EOF
 sudo pacman -Syu --noconfirm
 # pacman config
 printf "%b\n" "Configuring pacman"
