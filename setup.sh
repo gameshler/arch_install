@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 . ./common-script.sh
+. ./auto-mount.sh
 
 set -euo pipefail
 
