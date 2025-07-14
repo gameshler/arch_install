@@ -221,7 +221,7 @@ sgdisk -n 1::+2G --typecode=1:ef00 --change-name=1:"EFI" "${DISK}"
 sync
 partprobe "${DISK}"
 sleep 2
-sgdisk -n 2::-0 --typecode=2:8309 --change-name=2:"ROOT" "${DISK}"
+sgdisk -n 2::-0 --typecode=2:8300 --change-name=2:"ROOT" "${DISK}"
 sync
 partprobe "${DISK}"
 sleep 3
