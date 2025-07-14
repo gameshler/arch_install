@@ -262,9 +262,8 @@ elif [[ "${FS}" == "luks" ]]; then
   # open luks container and ROOT will be place holder
   echo -n "${LUKS_PASSWORD}" | cryptsetup open --allow-discards --persistent "${partition2}" ROOT -
   # now format that container
-  mkfs.btrfs -f /dev/mapper/ROOT
-  # create subvolumes for btrfs
-  mount -t btrfs /dev/mapper/ROOT /mnt
+  mkfs.btrfs -f "${partition2}"
+  mount -t btrfs "${partition2}" /mnt
   subvolumesetup
   ENCRYPTED_PARTITION_UUID=$(blkid -s UUID -o value "${partition2}")
 fi
@@ -389,7 +388,7 @@ mkdir -p /etc/dracut.conf.d
 if [[ "$FS" == "luks" ]]; then
   # LUKS configuration
   cat >/etc/dracut.conf.d/cmdline.conf <<CMD_CONF
-kernel_cmdline="rd.luks.uuid="${ENCRYPTED_PARTITION_UUID}"  root=/dev/mapper/ROOT rootfstype=btrfs rootflags=${MOUNT_OPTIONS}"
+kernel_cmdline="rd.luks.uuid="${ENCRYPTED_PARTITION_UUID}"  root=UUID=${BOOT_UUID} rootfstype=btrfs rootflags=${MOUNT_OPTIONS}"
 CMD_CONF
 
 elif [[ "$FS" == "btrfs" ]]; then
