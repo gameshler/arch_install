@@ -268,13 +268,14 @@ elif [[ "${FS}" == "luks" ]]; then
   ENCRYPTED_PARTITION_UUID=$(blkid -s UUID -o value "${partition2}")
 fi
 BOOT_UUID=$(blkid -s UUID -o value "${partition2}")
+EFI_UUID=$(blkid -s UUID -o value "${partition1}")
 sync
 if ! mountpoint -q /mnt; then
-  echo "ERROR! Failed to mount ${partition3} to /mnt after multiple attempts."
+  echo "ERROR! Failed to mount ${partition2} to /mnt after multiple attempts."
   exit 1
 fi
 mkdir -p /mnt/boot/efi
-mount -U "${BOOT_UUID}" /mnt/boot/efi
+mount -U "${EFI_UUID}" /mnt/boot/efi
 
 pacman-key --init
 pacman-key --populate
