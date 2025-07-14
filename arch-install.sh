@@ -67,7 +67,94 @@ select_option() {
 
   return $selected
 }
-set_password() {
+filesystem() {
+  echo -ne "
+    Please Select your file system for both boot and root
+    "
+  options=("btrfs" "ext4" "luks" "exit")
+  select_option "${options[@]}"
+
+  case $? in
+  0) export FS=btrfs ;;
+  1) export FS=ext4 ;;
+  2)
+    set_password "LUKS_PASSWORD"
+    export FS=luks
+    ;;
+  3) exit ;;
+  *)
+    echo "Wrong option please select again"
+    filesystem
+    ;;
+  esac
+
+}
+timezone() {
+
+  echo "Please enter your desired timezone e.g. Europe/London :"
+  read -r new_timezone
+  echo "${new_timezone} set as timezone"
+  export TIMEZONE=$new_timezone
+
+}
+keymap() {
+  echo -ne "
+    Please select key board layout from this list"
+  # These are default key maps as presented in official arch repo archinstall
+  # shellcheck disable=SC1010
+  options=(us by ca cf cz de dk es et fa fi fr gr hu il it lt lv mk nl no pl ro ru se sg ua uk)
+
+  select_option "${options[@]}"
+  keymap=${options[$?]}
+
+  echo -ne "Your key boards layout: ${keymap} \n"
+  export KEYMAP=$keymap
+}
+drivessd() {
+  echo -ne "
+    Is this an ssd? yes/no:
+    "
+
+  options=("Yes" "No")
+  select_option "${options[@]}"
+
+  case ${options[$?]} in
+  y | Y | yes | Yes | YES)
+    export MOUNT_OPTIONS="noatime,compress=zstd,ssd,commit=120"
+    ;;
+  n | N | no | NO | No)
+    export MOUNT_OPTIONS="noatime,compress=zstd,commit=120"
+    ;;
+  *)
+    echo "Wrong option. Try again"
+    drivessd
+    ;;
+  esac
+}
+diskpart() {
+
+  PS3='
+    Select the disk to install on: '
+  options=($(lsblk -n --output TYPE,KNAME,SIZE | awk '$1=="disk"{print "/dev/"$2"|"$3}'))
+
+  select_option "${options[@]}"
+  disk=${options[$?]%|*}
+
+  echo -e "\n${disk%|*} selected \n"
+  export DISK=${disk%|*}
+
+}
+userinfo() {
+  # Loop through user input until the user gives a valid username
+  while true; do
+    read -r -p "Please enter username: " username
+    if [[ "${username,,}" =~ ^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\$)$ ]]; then
+      break
+    fi
+    echo "Incorrect username."
+  done
+  export USERNAME=$username
+
   while true; do
     read -rs -p "Please enter password: " PASSWORD1
     echo -ne "\n"
@@ -79,139 +166,174 @@ set_password() {
       echo -ne "ERROR! Passwords do not match. \n"
     fi
   done
-  export "$1=$PASSWORD1"
-}
+  export PASSWORD=$PASSWORD1
 
-get_userinfo() {
+  # Loop through user input until the user gives a valid hostname, but allow the user to force save
   while true; do
-    read -r -p "Please enter username: " username
-    if [[ "${username,,}" =~ ^[a-z_]([a-z0-9_-]{0,31}|[a-z0-9_-]{0,30}\$)$ ]]; then
+    read -r -p "Please name your machine: " name_of_machine
+    # hostname regex (!!couldn't find spec for computer name!!)
+    if [[ "${name_of_machine,,}" =~ ^[a-z][a-z0-9_.-]{0,62}[a-z0-9]$ ]]; then
       break
     fi
-    echo "Incorrect username."
-  done
-  export USERNAME=$username
-
-  set_password USER_PASSWORD
-
-  while true; do
-    read -r -p "Please name your machine: " hostname
-    if [[ "${hostname,,}" =~ ^[a-z][a-z0-9_.-]{0,62}[a-z0-9]$ ]]; then
+    # if validation fails allow the user to force saving of the hostname
+    read -r -p "Hostname doesn't seem correct. Do you still want to save it? (y/n)" force
+    if [[ "${force,,}" = "y" ]]; then
       break
     fi
   done
-  export HOSTNAME=$hostname
+  export NAME_OF_MACHINE=$name_of_machine
 }
 
-select_disk() {
-  options=($(lsblk -n -d -o NAME,SIZE | awk '$1!="sr0"{print "/dev/"$1"|"$2}'))
-  PS3= "Select disk:"
-  select_option "${options[@]}"
-  export DISK="${options[$?]%|*}"
-}
+# starting functions
+background_checks
+clear
+userinfo
+clear
+diskpart
+clear
+filesystem
+clear
+timezone
+clear
+keymap
+
+pacman -Sy
+pacman -S --noconfirm archlinux-keyring
+sed -i 's/^#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
 if [ ! -d "/mnt" ]; then
   mkdir /mnt
 fi
-partition_disk() {
-  pacman -S --noconfirm --needed gptfdisk
-  umount -A --recursive /mnt
-  wipefs -fa "${DISK}"
-  sgdisk -Z "${DISK}"
-  sgdisk -a 2048 -o "${DISK}"
-  sgdisk -n 1::+1G --typecode=1:ef00 --change-name=1:"EFI" "${DISK}"
-  sgdisk -n 2:: --typecode=2:8309 --change-name=2:"LUKS" "${DISK}"
-  partprobe "${DISK}"
-  sleep 2
-  if [[ "${DISK}" =~ "nvme" ]]; then
-    export EFI_PART="${DISK}p1"
-    export LUKS_PART="${DISK}p2"
-  else
-    export EFI_PART="${DISK}1"
-    export LUKS_PART="${DISK}2"
-  fi
-}
-setup_luks_lvm() {
-  mkfs.fat -F32 "${EFI_PART}"
-  set_password LUKS_PASSWORD
-  echo -n "${LUKS_PASSWORD}" | cryptsetup luksFormat --type luks2 "${LUKS_PART}"
-  echo -n "${LUKS_PASSWORD}" | cryptsetup open --allow-discards --persistent "${LUKS_PART}" cryptlvm
-  pvcreate /dev/mapper/cryptlvm
-  vgcreate vg /dev/mapper/cryptlvm
-  lvcreate -l 100%FREE vg -n root
-}
-format_filesystem() {
-  mkfs.ext4 /dev/vg/root
-  mount /dev/vg/root /mnt
-  mkdir -p /mnt/boot/efi
-  mount "${EFI_PART}" /mnt/boot/efi
+
+pacman -S --noconfirm --needed gptfdisk
+umount -A --recursive /mnt
+wipefs -fa "${DISK}"
+sgdisk -Z "${DISK}"
+sgdisk -a 2048 -o "${DISK}"
+sgdisk -n 1::+1G --typecode=1:ef00 --change-name=1:"EFI" "${DISK}"
+sgdisk -n 2::-0 --typecode=2:8309 --change-name=2:"ROOT" "${DISK}"
+partprobe "${DISK}"
+sleep 5
+createsubvolumes() {
+  btrfs subvolume create /mnt/@
+  btrfs subvolume create /mnt/@home
 }
 
-base_install() {
-  pacman-key --init
-  pacman-key --populate
-  pacstrap /mnt base linux linux-firmware amd-ucode sudo \
-    vim nano konsole lvm2 dracut sbsigntools git \
-    ntfs-3g efibootmgr binutils networkmanager pacman
-}
-configure_fstab() {
-  genfstab -U /mnt >>/mnt/etc/fstab
-  echo "
-  Generated /etc/fstab:
-"
-  cat /mnt/etc/fstab
+# @description Mount all btrfs subvolumes after root has been mounted.
+mountallsubvol() {
+  mount -o "${MOUNT_OPTIONS}",subvol=@home "${partition2}" /mnt/home
 }
 
-configure_system() {
-  arch-chroot /mnt /bin/bash -c "KEYMAP='${KEYMAP}' /bin/bash" <<EOF
+# @description BTRFS subvolulme creation and mounting.
+subvolumesetup() {
+  # create nonroot subvolumes
+  createsubvolumes
+  # unmount root to remount with subvolume
+  umount /mnt
+  # mount @ subvolume
+  mount -o "${MOUNT_OPTIONS}",subvol=@ "${partition2}" /mnt
+  # make directories home, .snapshots, var, tmp
+  mkdir -p /mnt/home
+  # mount subvolumes
+  mountallsubvol
+}
+
+if [[ "${DISK}" =~ "nvme" ]]; then
+  partition1=${DISK}p1
+  partition2=${DISK}p2
+
+else
+  partition1=${DISK}1
+  partition2=${DISK}2
+fi
+
+if [[ "${FS}" == "btrfs" ]]; then
+  mkfs.fat -F32 -n "EFI" "${partition1}"
+  mkfs.btrfs -f "${partition2}"
+  mount -t btrfs "${partition2}" /mnt
+  subvolumesetup
+elif [[ "${FS}" == "ext4" ]]; then
+  mkfs.fat -F32 -n "EFI" "${partition1}"
+  mkfs.ext4 "${partition2}"
+  mount -t ext4 "${partition2}" /mnt
+elif [[ "${FS}" == "luks" ]]; then
+  mkfs.fat -F32 "${partition1}"
+  # enter luks password to cryptsetup and format root partition
+  echo -n "${LUKS_PASSWORD}" | cryptsetup -y -v luksFormat --type luks2 "${partition2}" -
+  # open luks container and ROOT will be place holder
+  echo -n "${LUKS_PASSWORD}" | cryptsetup open --allow-discards --persistent "${partition2}" ROOT -
+  # now format that container
+  mkfs.btrfs -f /dev/mapper/ROOT
+  # create subvolumes for btrfs
+  mount -t btrfs /dev/mapper/ROOT /mnt
+  subvolumesetup
+  ENCRYPTED_PARTITION_UUID=$(blkid -s UUID -o value "${partition2}")
+fi
+BOOT_UUID=$(blkid -s UUID -o value "${partition2}")
+sync
+if ! mountpoint -q /mnt; then
+  echo "ERROR! Failed to mount ${partition3} to /mnt after multiple attempts."
+  exit 1
+fi
+mkdir -p /mnt/boot/efi
+mount -U "${BOOT_UUID}" /mnt/boot/efi
+
+pacman-key --init
+pacman-key --populate
+pacstrap /mnt base base-devel linux linux-firmware amd-ucode sudo \
+  vim nano konsole lvm2 dracut sbsigntools git \
+  ntfs-3g efibootmgr binutils networkmanager pacman --noconfirm --needed
+
+genfstab -U /mnt >>/mnt/etc/fstab
+cat /mnt/etc/fstab
+
+arch-chroot /mnt /bin/bash -c "KEYMAP='${KEYMAP}' /bin/bash" <<EOF
+systemctl enable NetworkManager
+systemctl enable fstrim.timer
+sed -i 's/^#en_GB.UTF-8 UTF-8/en_GB.UTF-8 UTF-8/' /etc/locale.gen
+locale-gen
 # Time/Locale
 ln -sf /usr/share/zoneinfo/"${TIMEZONE}" /etc/localtime
 hwclock --systohc
-sed -i 's/^#en_GB.UTF-8/en_GB.UTF-8/' /etc/locale.gen
-locale-gen
 echo "LANG=en_GB.UTF-8" > /etc/locale.conf
 echo "KEYMAP=${KEYMAP}" > /etc/vconsole.conf
-
-# Hostname
-echo "$HOSTNAME" > /etc/hostname
-
+# Add sudo no password rights
+sed -i 's/^# %wheel ALL=(ALL) NOPASSWD: ALL/%wheel ALL=(ALL) NOPASSWD: ALL/' /etc/sudoers
+sed -i 's/^# %wheel ALL=(ALL:ALL) NOPASSWD: ALL/%wheel ALL=(ALL:ALL) NOPASSWD: ALL/' /etc/sudoers
+# Add parallel downloading
+sed -i 's/^#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
+#Set colors and enable the easter egg
+sed -i 's/^#Color/Color\nILoveCandy/' /etc/pacman.conf
+#Enable multilib
+sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
+pacman -Sy --noconfirm --needed
 # Users
+groupadd libvirt
+useradd -m -G wheel,libvirt -s /bin/bash $USERNAME
+echo "$USERNAME created, home directory created, added to wheel and libvirt group, default shell set to /bin/bash"
+echo "$USERNAME:$PASSWORD" | chpasswd
+echo "$USERNAME password set"
 # Set root password 
 echo "Setting root password:"
 passwd
+# Hostname
+echo $NAME_OF_MACHINE > /etc/hostname
 pacman -Syu man-db
-# Create user 
-useradd -m -G wheel -s /bin/bash "$USERNAME"
-echo "Setting password for $USERNAME:"
-echo "$USERNAME:$USER_PASSWORD" | chpasswd
 
 # Configure sudo 
 
 # Remove no password sudo rights
 sed -i 's/^%wheel ALL=(ALL) NOPASSWD: ALL/# %wheel ALL=(ALL) NOPASSWD: ALL/' /etc/sudoers
 sed -i 's/^%wheel ALL=(ALL:ALL) NOPASSWD: ALL/# %wheel ALL=(ALL:ALL) NOPASSWD: ALL/' /etc/sudoers
-
 # Add sudo rights
 sed -i 's/^# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoers
 sed -i 's/^# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /etc/sudoers
 
-# Verify user is in wheel group 
-usermod -aG wheel "$USERNAME"
-systemctl enable NetworkManager
-systemctl enable fstrim.timer
-
-# Pacman
-sed -i 's/^#ParallelDownloads/ParallelDownloads/' /etc/pacman.conf
-
-pacman -Sy
 EOF
-}
 
-configure_uki() {
+# Create dracut scripts directory
+mkdir -p /usr/local/bin
 
-  # Create dracut scripts directory
-  mkdir -p /usr/local/bin
-
-  cat >/usr/local/bin/dracut-install.sh <<'INSTALL_SCRIPT'
+cat >/usr/local/bin/dracut-install.sh <<'INSTALL_SCRIPT'
 #!/usr/bin/env bash
 
 	mkdir -p /boot/efi/EFI/Linux
@@ -226,16 +348,16 @@ configure_uki() {
 	done
 INSTALL_SCRIPT
 
-  cat >/usr/local/bin/dracut-remove.sh <<'REMOVE_SCRIPT'
+cat >/usr/local/bin/dracut-remove.sh <<'REMOVE_SCRIPT'
 #!/usr/bin/env bash
  	rm -f /boot/efi/EFI/Linux/bootx64.efi
 REMOVE_SCRIPT
 
-  chmod +x /usr/local/bin/dracut-*
+chmod +x /usr/local/bin/dracut-*
 
-  mkdir -p /etc/pacman.d/hooks
+mkdir -p /etc/pacman.d/hooks
 
-  cat >/etc/pacman.d/hooks/90-dracut-install.hook <<'INSTALL_HOOK'
+cat >/etc/pacman.d/hooks/90-dracut-install.hook <<'INSTALL_HOOK'
   [Trigger]
 	Type = Path
 	Operation = Install
@@ -250,7 +372,7 @@ REMOVE_SCRIPT
 	NeedsTargets
 INSTALL_HOOK
 
-  cat >/etc/pacman.d/hooks/60-dracut-remove.hook <<'REMOVE_HOOK'
+cat >/etc/pacman.d/hooks/60-dracut-remove.hook <<'REMOVE_HOOK'
   [Trigger]
 	Type = Path
 	Operation = Remove
@@ -262,22 +384,33 @@ INSTALL_HOOK
 	Exec = /usr/local/bin/dracut-remove.sh
 	NeedsTargets
 REMOVE_HOOK
-  mkdir -p /etc/dracut.conf.d
-  local LUKS_UUID=$(blkid -s UUID -o value "${LUKS_PART}")
+mkdir -p /etc/dracut.conf.d
+
+if [[ "$FS" == "luks" ]]; then
+  # LUKS configuration
   cat >/etc/dracut.conf.d/cmdline.conf <<CMD_CONF
-kernel_cmdline="rd.luks.uuid=luks-"${LUKS_UUID}" rd.lvm.lv=vg/root root=/dev/mapper/vg-root rootfstype=ext4 rootflags=rw,relatime"
+kernel_cmdline="rd.luks.uuid="${ENCRYPTED_PARTITION_UUID}"  root=/dev/mapper/ROOT rootfstype=btrfs rootflags=${MOUNT_OPTIONS}"
 CMD_CONF
 
-  cat >/etc/dracut.conf.d/flags.conf <<FLAGS_CONF
+elif [[ "$FS" == "btrfs" ]]; then
+  # Plain Btrfs configuration
+  cat >/etc/dracut.conf.d/cmdline.conf <<CMD_CONF
+kernel_cmdline="root=UUID=${BOOT_UUID} rootfstype=btrfs rootflags=${MOUNT_OPTIONS}"
+CMD_CONF
+
+else
+  # ext4 configuration
+  cat >/etc/dracut.conf.d/cmdline.conf <<CMD_CONF
+kernel_cmdline="root=UUID=${BOOT_UUID} rootfstype=ext4 rootflags=${MOUNT_OPTIONS}"
+CMD_CONF
+fi
+
+cat >/etc/dracut.conf.d/flags.conf <<FLAGS_CONF
 compress="zstd"
 hostonly="no"
 FLAGS_CONF
-  pacman -S linux
-
-}
-
-configure_bootloader() {
-  /bin/bash <<EOF
+pacman -S linux --noconfirm
+/bin/bash <<EOF
     for entry in \$(efibootmgr | grep 'Arch Linux' | awk '{print \$1}' | sed 's/Boot//;s/\*//'); do
         efibootmgr -b \$entry -B
     done
@@ -286,40 +419,9 @@ configure_bootloader() {
     
     efibootmgr
 EOF
-}
-configure_secureboot() {
-  /bin/bash <<EOF
-    pacman -S sbctl --noconfirm 
-    sbctl create-keys
-    sbctl sign -s /boot/efi/EFI/Linux/bootx64.efi
-    
-    echo 'uefi_secureboot_cert="/var/lib/sbctl/keys/db/db.pem"' > /etc/dracut.conf.d/secureboot.conf
-    echo 'uefi_secureboot_key="/var/lib/sbctl/keys/db/db.key"' >> /etc/dracut.conf.d/secureboot.conf
-    cat >/etc/pacman.d/hooks/zz-sbctl.hook <<'HOOK'
-  [Trigger]
-	Type = Path
-	Operation = Install
-	Operation = Upgrade
-	Operation = Remove
-	Target = boot/*
-	Target = efi/*
-	Target = usr/lib/modules/*/vmlinuz
-	Target = usr/lib/initcpio/*
-	Target = usr/lib/**/efi/*.efi*
 
-	[Action]
-	Description = Signing EFI binaries...
-	When = PostTransaction
-	Exec = /usr/bin/sbctl sign /boot/efi/EFI/Linux/bootx64.efi
-HOOK
-    # Enroll keys with Microsoft keys included
-    sbctl enroll-keys --microsoft
-EOF
-}
-
-configure_firewall() {
-  pacman -S nftables --noconfirm
-  cat >/etc/nftables.conf <<'NFT'
+pacman -S nftables --noconfirm
+cat >/etc/nftables.conf <<'NFT'
 #!/usr/bin/nft -f
 
 destroy table inet filter
@@ -352,9 +454,9 @@ table inet filter {
 }
 NFT
 
-  systemctl enable --now nftables
+systemctl enable --now nftables
 
-  cat >/etc/sysctl.d/90-network.conf <<'SYSCTL'
+cat >/etc/sysctl.d/90-network.conf <<'SYSCTL'
 # Do not act as a router
 net.ipv4.ip_forward = 0
 net.ipv6.conf.all.forwarding = 0
@@ -375,9 +477,9 @@ net.ipv4.conf.all.send_redirects = 0
 net.ipv4.conf.default.send_redirects = 0
 SYSCTL
 
-  sysctl --system
-  pacman -Syu
-}
+sysctl --system
+pacman -Syu
+
 install_kde() {
 
   pacman -S --noconfirm plasma sddm
@@ -390,59 +492,14 @@ SCRIPT
 
   systemctl enable sddm
 }
-# --------------------------
-# Main Script Execution
-# --------------------------
-main() {
+# Optional KDE
+echo "Install KDE Plasma? (y/n)"
+read -n1 answer
+[[ "$answer" =~ [yY] ]] && install_kde
 
-  background_checks
-  clear
-  get_userinfo
-  clear
-  select_disk
-  clear
-  pacman -Sy
-  clear
-  partition_disk
-  clear
-  setup_luks_lvm
-  clear
-  format_filesystem
-  clear
-  # Configuration
-  echo "=== Configuring System ==="
-  echo "Please enter your desired timezone e.g. Europe/London :"
-  read -r new_timezone
-  echo "${new_timezone} set as timezone"
-  export TIMEZONE=$new_timezone
-  pacman -Sy
-  pacman -S --noconfirm archlinux-keyring
-  export KEYMAP="us"
-  base_install
-  clear
-  configure_fstab
-  clear
-  configure_system
-  clear
-  configure_uki
-  clear
-  configure_bootloader
-  clear
-  configure_secureboot
-  clear
-  configure_firewall
-  clear
-  # Optional KDE
-  echo "Install KDE Plasma? (y/n)"
-  read -n1 answer
-  [[ "$answer" =~ [yY] ]] && install_kde
-
-  # Completion
-  echo "=== Installation Complete ==="
-  echo "1. Reboot system"
-  echo "2. Enable SecureBoot in BIOS"
-  echo "3. Set BIOS password if desired"
-  echo "4. Log in as $USERNAME"
-}
-
-main
+# Completion
+echo "=== Installation Complete ==="
+echo "1. Reboot system"
+echo "2. Enable SecureBoot in BIOS"
+echo "3. Set BIOS password if desired"
+echo "4. Log in as $USERNAME"
