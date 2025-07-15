@@ -5,6 +5,23 @@
 
 set -euo pipefail
 
+select_country() {
+  echo -ne "
+    Please select your country code from this list"
+  # These are default key maps as presented in official arch repo archinstall
+  # shellcheck disable=SC1010
+  options=("AU" "AT" "BY" "BE" "BR" "BG" "CA" "CL" "CN" "CO" "CZ" "DK" "EC" "FI"
+    "FR" "DE" "GR" "HK" "HU" "IS" "IN" "ID" "IR" "IE" "IL" "IT" "JP" "KZ"
+    "LV" "LT" "LU" "MK" "NL" "NC" "NZ" "NO" "PL" "PT" "RO" "RU" "RS" "SG"
+    "SK" "ZA" "KR" "ES" "SE" "CH" "TW" "TH" "TR" "UA" "GB" "US" "VN")
+
+  select_option "${options[@]}"
+  country=${options[$?]}
+
+  echo -ne "Your country code is: ${country} \n"
+  export COUNTRY=$country
+}
+
 printf "%b\n" "Checking System Package Manager and AUR"
 checkPackageManager "pacman"
 check_init_manager 'systemctl rc-service sv'
@@ -32,7 +49,13 @@ install_packages "$PACKAGER" \
   libreoffice-fresh vlc curl flatpak fastfetch p7zip unrar tar rsync \
   exfat-utils fuse-exfat flac jdk-openjdk gimp vulkan-radeon lib32-vulkan-radeon \
   base-devel kate mangohud lib32-mangohud corectrl openssh dolphin \
-  telegram-desktop htop discord steam
+  telegram-desktop htop discord steam reflector
+
+select_country
+cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
+reflector --verbose --protocol https -a 48 -c "$COUNTRY" --score 5 -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
+systemctl enable --now reflector.timer
+
 checkAurHelper
 printf "%b\n" "Installing AUR packages with yay"
 install_packages "yay" \
