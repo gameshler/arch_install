@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
-. ./common-script.sh
+. ../common-script.sh
 
 set -euo pipefail
 
 cleanup_system() {
+  
   printf "%b\n" "Performing system cleanup..."
 
   case "$PACKAGER" in

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_URL="https://raw.githubusercontent.com/gameshler/arch_install/main"
+REPO_URL="https://raw.githubusercontent.com/gameshler/arch_install/main/core/tabs"
 FILES=(setup.sh common-script.sh auto-mount.sh .bashrc .gitconfig .gitignore)
 
 trap 'rm -f setup.sh common-script.sh auto-mount.sh' EXIT

@@ -133,3 +133,5 @@ select_option() {
 
   return $selected
 }
+checkPackageManager "pacman"
+check_init_manager 'systemctl rc-service sv'

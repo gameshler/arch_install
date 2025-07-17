@@ -79,8 +79,3 @@ mount_drive() {
   fi
 }
 
-select_drive
-get_uuid_fstype
-create_mount_point
-update_fstab
-mount_drive

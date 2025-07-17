@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-. ./common-script.sh
-. ./auto-mount.sh
+. ../common-script.sh
+. ../utils/auto-mount.sh
 
 set -euo pipefail
 
@@ -23,8 +23,6 @@ select_country() {
 }
 
 printf "%b\n" "Checking System Package Manager and AUR"
-checkPackageManager "pacman"
-check_init_manager 'systemctl rc-service sv'
 
 sudo pacman -Syu --noconfirm
 # pacman config
@@ -134,6 +132,10 @@ source $HOME/.bashrc || true
 
 printf "%b\n" "Mounting Drives..."
 
-./auto-mount.sh
+select_drive
+get_uuid_fstype
+create_mount_point
+update_fstab
+mount_drive
 
 printf "%b\n" "Setup completed successfully!"
