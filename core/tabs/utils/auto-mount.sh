@@ -78,4 +78,12 @@ mount_drive() {
     exit 1
   fi
 }
+main(){
+select_drive
+get_uuid_fstype
+create_mount_point
+update_fstab
+mount_drive
+}
 
+main
