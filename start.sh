@@ -57,7 +57,7 @@ main() {
   if [[ -f "$MAIN_SCRIPT" ]]; then
     echo -e "Make sure to run setup.sh first"
     echo -e "${COLOR_GREEN}Starting installation...${COLOR_RESET}"
-    exec "$MAIN_SCRIPT"
+    "$MAIN_SCRIPT"
   else
     echo -e "${COLOR_RED}Main script not found at $MAIN_SCRIPT${COLOR_RESET}"
     exit 1
