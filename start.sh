@@ -4,7 +4,7 @@ set -euo pipefail
 
 # Configuration
 REPO="gameshler/arch_install"
-BRANCH="main"
+BRANCH="development"
 TEMP_DIR=$(mktemp -d -t arch_install-XXXXXX)
 INSTALL_DIR="$HOME/Downloads/arch_install" 
 
@@ -15,13 +15,10 @@ COLOR_RESET="\e[0m"
 
 # Cleanup 
 cleanup() {
-  echo -e "${COLOR_GREEN}Cleaning temporary files...${COLOR_RESET}"
+  echo -e "${COLOR_GREEN}Cleaning up temporary files...${COLOR_RESET}"
   rm -rf "$TEMP_DIR"
-
-  read -rp "Delete installation files in $INSTALL_DIR? [y/N] " choice
-  if [[ "$choice" =~ ^[Yy] ]]; then
-    rm -rf "$INSTALL_DIR"
-  fi
+  echo -e "${COLOR_GREEN}Removing installation directory...${COLOR_RESET}"
+  rm -rf "$INSTALL_DIR"
 }
 
 # Main
@@ -54,7 +51,6 @@ main() {
   find "$INSTALL_DIR" -name "*.sh" -exec chmod +x {} +
   
   # Set environment variables
-  readonly SCRIPT_DIR="$INSTALL_DIR"
   export DOT_FILES="$INSTALL_DIR/dotfiles"
   export TABS_DIR="$INSTALL_DIR/core/tabs"
   export COMMON_SCRIPT="$TABS_DIR/common-script.sh"
@@ -65,7 +61,7 @@ main() {
   if [[ -f "$MAIN_SCRIPT" ]]; then
     echo -e "Make sure to run setup.sh first"
     echo -e "${COLOR_GREEN}Starting installation...${COLOR_RESET}"
-    exec "$MAIN_SCRIPT"
+    source "$MAIN_SCRIPT"
   else
     echo -e "${COLOR_RED}Main script not found at $MAIN_SCRIPT${COLOR_RESET}"
     exit 1

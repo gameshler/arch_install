@@ -2,6 +2,7 @@
 
 source "$COMMON_SCRIPT" 
 source "$AUTO_MOUNT" 
+source "$DOT_FILES"
 
 set -euo pipefail
 
