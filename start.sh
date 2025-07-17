@@ -5,7 +5,7 @@ set -euo pipefail
 # Configuration
 REPO="gameshler/arch_install"
 BRANCH="development"
-TEMP_DIR=$(mktemp -d -t arch_install-XXXXXX)
+export TEMP_DIR=$(mktemp -d -t arch_install-XXXXXX)
 export INSTALL_DIR="$HOME/Downloads/arch_install" 
 
 # Colors
@@ -13,19 +13,8 @@ COLOR_GREEN="\e[32m"
 COLOR_RED="\e[31m"
 COLOR_RESET="\e[0m"
 
-# Cleanup 
-cleanup() {
-  echo -e "${COLOR_GREEN}Cleaning up temporary files...${COLOR_RESET}"
-  rm -rf "$TEMP_DIR"
-  read -rp "Delete installation files in $INSTALL_DIR? [y/N] " choice
-  if [[ "$choice" =~ ^[Yy] ]]; then
-    rm -rf "$INSTALL_DIR"
-  fi
-}
-
 # Main
 main() {
-  trap cleanup EXIT
   
   echo -e "${COLOR_GREEN}Downloading repository...${COLOR_RESET}"
   

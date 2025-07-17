@@ -16,7 +16,14 @@ COLOR_RESET="\e[0m"
 pause() {
   read -rp $'\nPress Enter to return...'
 }
-
+cleanup() {
+  echo -e "${COLOR_GREEN}Cleaning up temporary files...${COLOR_RESET}"
+  rm -rf "$TEMP_DIR"
+  read -rp "Delete installation files in $INSTALL_DIR? [y/N] " choice
+  if [[ "$choice" =~ ^[Yy] ]]; then
+    rm -rf "$INSTALL_DIR"
+  fi
+}
 choose_directory() {
   mapfile -t DIRS < <(find "$TABS_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
 
@@ -81,6 +88,7 @@ choose_script() {
 }
 
 main() {
+  trap cleanup EXIT
   while true; do
     choose_directory
   done
