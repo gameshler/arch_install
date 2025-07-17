@@ -17,8 +17,10 @@ COLOR_RESET="\e[0m"
 cleanup() {
   echo -e "${COLOR_GREEN}Cleaning up temporary files...${COLOR_RESET}"
   rm -rf "$TEMP_DIR"
-  echo -e "${COLOR_GREEN}Removing installation directory...${COLOR_RESET}"
-  rm -rf "$INSTALL_DIR"
+  read -rp "Delete installation files in $INSTALL_DIR? [y/N] " choice
+  if [[ "$choice" =~ ^[Yy] ]]; then
+    rm -rf "$INSTALL_DIR"
+  fi
 }
 
 # Main
