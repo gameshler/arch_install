@@ -16,12 +16,6 @@ COLOR_RESET="\e[0m"
 pause() {
   read -rp $'\nPress Enter to return...'
 }
-cleanup() {
-  read -rp "Delete installation files? [y/N] " choice
-  if [[ "$choice" =~ ^[Yy] ]]; then
-    rm -rf "$INSTALL_DIR"
-  fi
-}
 
 choose_directory() {
   mapfile -t DIRS < <(find "$TABS_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
@@ -87,7 +81,6 @@ choose_script() {
 }
 
 main() {
-  trap cleanup EXIT
   while true; do
     choose_directory
   done
