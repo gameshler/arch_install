@@ -8,16 +8,11 @@ export TABS_DIR="$INSTALL_DIR/core/tabs"
 export COMMON_SCRIPT="$TABS_DIR/common-script.sh"
 export AUTO_MOUNT="$TABS_DIR/utils/auto-mount.sh"
 
-COLOR_YELLOW="\e[33m"
-COLOR_GREEN="\e[32m"
-COLOR_RED="\e[31m"
-COLOR_RESET="\e[0m"
-
 pause() {
   read -rp $'\nPress Enter to return...'
 }
 cleanup() {
-  echo -e "${COLOR_GREEN}Cleaning up temporary files...${COLOR_RESET}"
+  echo -e "Cleaning up temporary files..."
   rm -rf "$TEMP_DIR"
   read -rp "Delete installation files in $INSTALL_DIR? [y/N] " choice
   if [[ "$choice" =~ ^[Yy] ]]; then
@@ -28,12 +23,12 @@ choose_directory() {
   mapfile -t DIRS < <(find "$TABS_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
 
   if [[ "${#DIRS[@]}" -eq 0 ]]; then
-    echo -e "${COLOR_RED}No folders found in $TABS_DIR.${COLOR_RESET}"
+    echo -e "No folders found in $TABS_DIR."
     exit 1
   fi
 
   while true; do
-    echo -e "${COLOR_YELLOW}Available Categories:${COLOR_RESET}"
+    echo -e "Available Categories:"
     local i=1
     for dir in "${DIRS[@]}"; do
       echo "$i) $(basename "$dir")"
@@ -46,10 +41,10 @@ choose_directory() {
     if (( choice >= 1 && choice <= ${#DIRS[@]} )); then
       choose_script "${DIRS[$((choice - 1))]}"
     elif (( choice == ${#DIRS[@]} + 1 )); then
-      echo -e "${COLOR_GREEN}Exiting.${COLOR_RESET}"
+      echo -e "Exiting."
       exit 0
     else
-      echo -e "${COLOR_RED}Invalid choice.${COLOR_RESET}"
+      echo -e "Invalid choice."
     fi
   done
 }
@@ -59,13 +54,13 @@ choose_script() {
   mapfile -t SCRIPTS < <(find "$dir" -maxdepth 1 -type f -name "*.sh" | sort)
 
   if [[ "${#SCRIPTS[@]}" -eq 0 ]]; then
-    echo -e "${COLOR_RED}No scripts found in $(basename "$dir").${COLOR_RESET}"
+    echo -e "No scripts found in $(basename "$dir")."
     pause
     return
   fi
 
   while true; do
-    echo -e "${COLOR_YELLOW}Scripts in $(basename "$dir"):${COLOR_RESET}"
+    echo -e "Scripts in $(basename "$dir"):"
     local i=1
     for script in "${SCRIPTS[@]}"; do
       echo "$i) $(basename "$script")"
@@ -76,13 +71,13 @@ choose_script() {
 
     read -rp "Choose a script to run [1-$i]: " choice
     if (( choice >= 1 && choice <= ${#SCRIPTS[@]} )); then
-      echo -e "${COLOR_GREEN}Running: $(basename "${SCRIPTS[$((choice - 1))]}")${COLOR_RESET}"
+      echo -e "Running: $(basename "${SCRIPTS[$((choice - 1))]}")"
       bash "${SCRIPTS[$((choice - 1))]}"
       pause
     elif (( choice == ${#SCRIPTS[@]} + 1 )); then
       return
     else
-      echo -e "${COLOR_RED}Invalid choice.${COLOR_RESET}"
+      echo -e "Invalid choice."
     fi
   done
 }

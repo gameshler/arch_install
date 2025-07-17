@@ -4,7 +4,7 @@ set -euo pipefail
 
 # Configuration
 REPO="gameshler/arch_install"
-BRANCH="main"
+BRANCH="development"
 export TEMP_DIR=$(mktemp -d -t arch_install-XXXXXX)
 export INSTALL_DIR="$HOME/Downloads/arch_install" 
 
