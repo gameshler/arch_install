@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-. ../common-script.sh
-. ../utils/auto-mount.sh
+source "$COMMON_SCRIPT" 
+source "$AUTO_MOUNT" 
 
 set -euo pipefail
 
@@ -61,12 +61,12 @@ install_packages "yay" \
 
 # corectrl autostart setup
 printf "%b\n" "Setting up corectrl autostart"
-mkdir -p $HOME/.config/autostart
-cp /usr/share/applications/org.corectrl.CoreCtrl.desktop $HOME/.config/autostart/org.corectrl.CoreCtrl.desktop || true
+mkdir -p "$HOME/.config/autostart"
+cp /usr/share/applications/org.corectrl.CoreCtrl.desktop "$HOME/.config/autostart/org.corectrl.CoreCtrl.desktop" || true
 
 # mangohud config
 printf "%b\n" "Configuring MangoHud"
-mkdir -p "$HOME/.config/MangoHud" && cp /usr/share/doc/mangohud/MangoHud.conf.example $HOME/.config/MangoHud/MangoHud.conf || true
+mkdir -p "$HOME/.config/MangoHud" && cp /usr/share/doc/mangohud/MangoHud.conf.example "$HOME/.config/MangoHud/MangoHud.conf" || true
 config_file="$HOME/.config/MangoHud/MangoHud.conf"
 
 # Settings you want to enable
@@ -111,14 +111,14 @@ node --version
 # pnpm global tools
 printf "%b\n" "Installing pnpm and global node modules"
 curl -fsSL https://get.pnpm.io/install.sh | sh -
-source $HOME/.bashrc || true
+source "$HOME/.bashrc" || true
 pnpm add -g license gitignore
 
 # Dotfiles array
 dotfiles=(.gitignore .gitconfig .bashrc)
 
 for dotfile in "${dotfiles[@]}"; do
-  src="./$dotfile"
+  src="$DOT_FILES/$dotfile"
   dest="$HOME/$dotfile"
   if [ -f "$src" ]; then
     cp "$src" "$dest"
@@ -128,7 +128,7 @@ for dotfile in "${dotfiles[@]}"; do
 done
 
 # Source .bashrc to apply changes
-source $HOME/.bashrc || true
+source "$HOME/.bashrc" || true
 
 printf "%b\n" "Mounting Drives..."
 
