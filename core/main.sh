@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-source "$TABS_DIR"
-
 set -euo pipefail
 
 # Set environment variables
