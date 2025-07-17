@@ -6,7 +6,7 @@ set -euo pipefail
 REPO="gameshler/arch_install"
 BRANCH="development"
 TEMP_DIR=$(mktemp -d -t arch_install-XXXXXX)
-INSTALL_DIR="$HOME/Downloads/arch_install" 
+export INSTALL_DIR="$HOME/Downloads/arch_install" 
 
 # Colors
 COLOR_GREEN="\e[32m"
@@ -49,12 +49,6 @@ main() {
   
   # Make scripts executable
   find "$INSTALL_DIR" -name "*.sh" -exec chmod +x {} +
-  
-  # Set environment variables
-  export DOT_FILES="$INSTALL_DIR/dotfiles"
-  export TABS_DIR="$INSTALL_DIR/core/tabs"
-  export COMMON_SCRIPT="$TABS_DIR/common-script.sh"
-  export AUTO_MOUNT="$TABS_DIR/utils/auto-mount.sh"
   
   # Verify and run main script
   MAIN_SCRIPT="$INSTALL_DIR/core/main.sh"

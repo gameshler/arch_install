@@ -4,6 +4,12 @@ source "$TABS_DIR"
 
 set -euo pipefail
 
+# Set environment variables
+export DOT_FILES="$INSTALL_DIR/dotfiles"
+export TABS_DIR="$INSTALL_DIR/core/tabs"
+export COMMON_SCRIPT="$TABS_DIR/common-script.sh"
+export AUTO_MOUNT="$TABS_DIR/utils/auto-mount.sh"
+
 COLOR_YELLOW="\e[33m"
 COLOR_GREEN="\e[32m"
 COLOR_RED="\e[31m"
