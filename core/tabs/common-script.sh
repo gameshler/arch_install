@@ -20,7 +20,7 @@ checkPackageManager() {
 
 checkAurHelper() {
   if [[ "$PACKAGER" == "pacman" ]]; then
-    local helper="yay"
+    export helper="yay"
     if command_exists "$helper"; then
       printf "%b\n" "Using $helper as AUR helper"
       return
