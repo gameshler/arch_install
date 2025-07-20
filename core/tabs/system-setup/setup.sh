@@ -73,10 +73,18 @@ printf "%b\n" "Installing AUR packages with yay"
 install_packages "$helper" \
   postman-bin brave-bin visual-studio-code-bin
 
-# corectrl autostart setup
-printf "%b\n" "Setting up corectrl autostart"
-mkdir -p "$HOME/.config/autostart"
-cp /usr/share/applications/org.corectrl.CoreCtrl.desktop "$HOME/.config/autostart/org.corectrl.CoreCtrl.desktop" || true
+if echo "${gpu_type}" | grep -E "NVIDIA|GeForce"; then
+  # check if flatpak is installed
+  printf "%b\n" "Setting up GreenWithEnvy"
+  flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+  flatpak --user install flathub com.leinardi.gwe
+  flatpak update 
+elif echo "${gpu_type}" | grep 'VGA' | grep -E "Radeon|AMD"; then
+  # corectrl autostart setup
+  printf "%b\n" "Setting up corectrl autostart"
+  mkdir -p "$HOME/.config/autostart"
+  cp /usr/share/applications/org.corectrl.CoreCtrl.desktop "$HOME/.config/autostart/org.corectrl.CoreCtrl.desktop" || true
+fi 
 
 # mangohud config
 printf "%b\n" "Configuring MangoHud"
