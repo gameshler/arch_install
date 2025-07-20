@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 source "$COMMON_SCRIPT" 
-source "$DOT_FILES"
 
 set -euo pipefail
 
