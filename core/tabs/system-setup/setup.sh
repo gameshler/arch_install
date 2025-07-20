@@ -21,8 +21,6 @@ select_country() {
   export COUNTRY=$country
 }
 
-printf "%b\n" "Checking System Package Manager and AUR"
-
 sudo pacman -Syu --noconfirm
 # pacman config
 printf "%b\n" "Configuring pacman"
