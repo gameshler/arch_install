@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 source "$COMMON_SCRIPT" 
-source "$AUTO_MOUNT" 
 source "$DOT_FILES"
 
 set -euo pipefail
@@ -133,10 +132,6 @@ source "$HOME/.bashrc" || true
 
 printf "%b\n" "Mounting Drives..."
 
-select_drive
-get_uuid_fstype
-create_mount_point
-update_fstab
-mount_drive
+source "$AUTO_MOUNT" 
 
 printf "%b\n" "Setup completed successfully!"
