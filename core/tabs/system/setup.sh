@@ -21,7 +21,9 @@ select_country() {
   export COUNTRY=$country
 }
 
-sudo pacman -Syu --noconfirm
+printf "%b\n" "Checking System Package Manager and AUR"
+
+sudo "$PACKAGER" -Syu --noconfirm
 # pacman config
 printf "%b\n" "Configuring pacman"
 sudo sed -i -E \
@@ -38,11 +40,26 @@ if ! grep -q "^ILoveCandy" /etc/pacman.conf; then
   sudo sed -i '/^ParallelDownloads *=.*/a ILoveCandy' /etc/pacman.conf
 fi
 
-sudo pacman -Syyu --noconfirm
+sudo "$PACKAGER" -Syyu --noconfirm
 printf "%b\n" "Installing packages"
+gpu_type=$(lspci | grep -E "VGA|3D|Display")
+if echo "${gpu_type}" | grep -E "NVIDIA|GeForce"; then
+    echo "Installing NVIDIA drivers: nvidia-lts"
+    "$PACKAGER" -S --noconfirm --needed nvidia-lts
+elif echo "${gpu_type}" | grep 'VGA' | grep -E "Radeon|AMD"; then
+    echo "Installing AMD drivers: xf86-video-amdgpu"
+    "$PACKAGER" -S --noconfirm --needed vulkan-radeon lib32-vulkan-radeon
+elif echo "${gpu_type}" | grep -E "Integrated Graphics Controller"; then
+    echo "Installing Intel drivers:"
+    "$PACKAGER" -S --noconfirm --needed libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa
+elif echo "${gpu_type}" | grep -E "Intel Corporation UHD"; then
+    echo "Installing Intel UHD drivers:"
+    "$PACKAGER" -S --noconfirm --needed libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa
+fi
+
 install_packages "$PACKAGER" \
   libreoffice-fresh vlc curl flatpak fastfetch p7zip unrar tar rsync \
-  exfat-utils fuse-exfat flac jdk-openjdk gimp vulkan-radeon lib32-vulkan-radeon \
+  exfat-utils fuse-exfat flac jdk-openjdk gimp \
   base-devel kate mangohud lib32-mangohud corectrl openssh dolphin \
   telegram-desktop htop discord steam reflector
 
@@ -53,13 +70,21 @@ systemctl enable --now reflector.timer
 
 checkAurHelper
 printf "%b\n" "Installing AUR packages with yay"
-install_packages "yay" \
+install_packages "$helper" \
   postman-bin brave-bin visual-studio-code-bin
 
-# corectrl autostart setup
-printf "%b\n" "Setting up corectrl autostart"
-mkdir -p "$HOME/.config/autostart"
-cp /usr/share/applications/org.corectrl.CoreCtrl.desktop "$HOME/.config/autostart/org.corectrl.CoreCtrl.desktop" || true
+if echo "${gpu_type}" | grep -E "NVIDIA|GeForce"; then
+  # check if flatpak is installed
+  printf "%b\n" "Setting up GreenWithEnvy"
+  flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+  flatpak --user install flathub com.leinardi.gwe
+  flatpak update 
+elif echo "${gpu_type}" | grep 'VGA' | grep -E "Radeon|AMD"; then
+  # corectrl autostart setup
+  printf "%b\n" "Setting up corectrl autostart"
+  mkdir -p "$HOME/.config/autostart"
+  cp /usr/share/applications/org.corectrl.CoreCtrl.desktop "$HOME/.config/autostart/org.corectrl.CoreCtrl.desktop" || true
+fi 
 
 # mangohud config
 printf "%b\n" "Configuring MangoHud"
