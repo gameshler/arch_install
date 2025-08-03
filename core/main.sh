@@ -20,62 +20,61 @@ cleanup() {
   fi
 }
 choose_directory() {
-  mapfile -t DIRS < <(find "$TABS_DIR" -mindepth 1 -maxdepth 1 -type d | sort)
-
-  if [[ "${#DIRS[@]}" -eq 0 ]]; then
-    echo -e "No folders found in $TABS_DIR."
-    exit 1
-  fi
+  local current_dir="$TABS_DIR"
+  local parent_stack=()
 
   while true; do
-    echo -e "Available Categories:"
-    local i=1
-    for dir in "${DIRS[@]}"; do
-      echo "$i) $(basename "$dir")"
-      ((i++))
-    done
-    echo "$i) Exit"
-    echo ""
+    mapfile -t ENTRIES < <(find "$current_dir" -mindepth 1 -maxdepth 1 -print | sort)
 
-    read -rp "Choose a category [1-$i]: " choice
-    if (( choice >= 1 && choice <= ${#DIRS[@]} )); then
-      choose_script "${DIRS[$((choice - 1))]}"
-    elif (( choice == ${#DIRS[@]} + 1 )); then
-      echo -e "Exiting."
-      exit 0
-    else
-      echo -e "Invalid choice."
+    if [[ "${#ENTRIES[@]}" -eq 0 ]]; then
+      echo -e "No entries found in $current_dir."
+      if [[ "${#parent_stack[@]}" -eq 0 ]]; then
+        pause
+        return
+      fi
+      current_dir="${parent_stack[-1]}"
+      parent_stack=("${parent_stack[@]::${#parent_stack[@]}-1}")
+      continue
     fi
-  done
-}
 
-choose_script() {
-  local dir="$1"
-  mapfile -t SCRIPTS < <(find "$dir" -maxdepth 1 -type f -name "*.sh" | sort)
-
-  if [[ "${#SCRIPTS[@]}" -eq 0 ]]; then
-    echo -e "No scripts found in $(basename "$dir")."
-    pause
-    return
-  fi
-
-  while true; do
-    echo -e "Scripts in $(basename "$dir"):"
+    echo -e "\nCurrent Path: ${current_dir/$TABS_DIR\//}"
+    echo "Available Items:"
+    local options=()
     local i=1
-    for script in "${SCRIPTS[@]}"; do
-      echo "$i) $(basename "$script")"
+
+    for entry in "${ENTRIES[@]}"; do
+      if [[ -d "$entry" ]]; then
+        echo "$i) $(basename "$entry")/"
+        options+=("$entry|dir")
+      elif [[ -f "$entry" && "$entry" == *.sh ]]; then
+        echo "$i) $(basename "$entry")"
+        options+=("$entry|file")
+      fi
       ((i++))
     done
+
     echo "$i) Back"
     echo ""
 
-    read -rp "Choose a script to run [1-$i]: " choice
-    if (( choice >= 1 && choice <= ${#SCRIPTS[@]} )); then
-      echo -e "Running: $(basename "${SCRIPTS[$((choice - 1))]}")"
-      bash "${SCRIPTS[$((choice - 1))]}"
-      pause
-    elif (( choice == ${#SCRIPTS[@]} + 1 )); then
-      return
+    read -rp "Choose an item to open or run [1-$i]: " choice
+
+    if (( choice >= 1 && choice <= ${#options[@]} )); then
+      selected="${options[$((choice - 1))]}"
+      IFS='|' read -r path type <<< "$selected"
+      if [[ "$type" == "dir" ]]; then
+        parent_stack+=("$current_dir")
+        current_dir="$path"
+      else
+        echo -e "\n Running: $(basename "$path")"
+        bash "$path"
+        pause
+      fi
+    elif (( choice == ${#options[@]} + 1 )); then
+      if [[ "${#parent_stack[@]}" -eq 0 ]]; then
+        return 
+      fi
+      current_dir="${parent_stack[-1]}"
+      parent_stack=("${parent_stack[@]::${#parent_stack[@]}-1}")
     else
       echo -e "Invalid choice."
     fi
