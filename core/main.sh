@@ -24,20 +24,10 @@ choose_directory() {
   local parent_stack=()
 
   while true; do
+    clear
     mapfile -t ENTRIES < <(find "$current_dir" -mindepth 1 -maxdepth 1 -print | sort)
 
-    if [[ "${#ENTRIES[@]}" -eq 0 ]]; then
-      echo -e "No entries found in $current_dir."
-      if [[ "${#parent_stack[@]}" -eq 0 ]]; then
-        pause
-        return
-      fi
-      current_dir="${parent_stack[-1]}"
-      parent_stack=("${parent_stack[@]::${#parent_stack[@]}-1}")
-      continue
-    fi
-
-    echo -e "\nCurrent Path: ${current_dir/$TABS_DIR\//}"
+    echo -e "Current Path: ${current_dir/$TABS_DIR\//}"
     echo "Available Items:"
     local options=()
     local i=1
@@ -53,7 +43,11 @@ choose_directory() {
       ((i++))
     done
 
-    echo "$i) Back"
+    if [[ "${#parent_stack[@]}" -eq 0 ]]; then
+      echo "$i) Exit"
+    else
+      echo "$i) Back"
+    fi
     echo ""
 
     read -rp "Choose an item to open or run [1-$i]: " choice
@@ -65,16 +59,19 @@ choose_directory() {
         parent_stack+=("$current_dir")
         current_dir="$path"
       else
-        echo -e "\n Running: $(basename "$path")"
+        clear
+        echo -e "Running: $(basename "$path")\n"
         bash "$path"
         pause
       fi
     elif (( choice == ${#options[@]} + 1 )); then
       if [[ "${#parent_stack[@]}" -eq 0 ]]; then
-        return 
+        echo -e "Exiting."
+        exit 0
+      else
+        current_dir="${parent_stack[-1]}"
+        parent_stack=("${parent_stack[@]::${#parent_stack[@]}-1}")
       fi
-      current_dir="${parent_stack[-1]}"
-      parent_stack=("${parent_stack[@]::${#parent_stack[@]}-1}")
     else
       echo -e "Invalid choice."
     fi
