@@ -13,12 +13,16 @@ fastUpdate() {
                 sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
             fi
 
-            dtype_local="$DTYPE"
-            if [ "$dtype_local" = "unknown" ]; then
-                dtype_local="arch"
-            fi
+            dtype_local="${DTYPE:-arch}"
+            echo "Using rate-mirrors with distro: $dtype_local"
 
-            if ! sudo rate-mirrors "$dtype_local" --top-mirrors-number-to-retest=5 --disable-comments --save /etc/pacman.d/mirrorlist --allow-root > /dev/null || [ ! -s "/etc/pacman.d/mirrorlist" ]; then
+            if ! sudo rate-mirrors "$dtype_local" \
+                    --top-mirrors-number-to-retest=5 \
+                    --disable-comments \
+                    --save /etc/pacman.d/mirrorlist \
+                    --allow-root > /dev/null \
+                || [ ! -s "/etc/pacman.d/mirrorlist" ]; then
+
                 printf "%b\n" "Rate-mirrors failed, restoring backup."
                 sudo cp /etc/pacman.d/mirrorlist.bak /etc/pacman.d/mirrorlist
             fi
