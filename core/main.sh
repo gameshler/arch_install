@@ -25,12 +25,20 @@ choose_directory() {
 
   while true; do
     clear
-    mapfile -t ENTRIES < <(find "$current_dir" -mindepth 1 -maxdepth 1 -print | sort)
-
     echo -e "Current Path: ${current_dir/$TABS_DIR\//}"
     echo "Available Items:"
     local options=()
     local i=1
+
+    if [[ "$current_dir" == "$TABS_DIR" ]]; then
+      mapfile -t ENTRIES < <(find "$current_dir" -mindepth 1 -maxdepth 1 -type d | sort)
+    else
+      mapfile -t ENTRIES < <(find "$current_dir" -mindepth 1 -maxdepth 1 \( -type d -o -type f -name "*.sh" \) | sort)
+    fi
+
+    if [[ "${#ENTRIES[@]}" -eq 0 ]]; then
+      echo "No items found."
+    fi
 
     for entry in "${ENTRIES[@]}"; do
       if [[ -d "$entry" ]]; then
