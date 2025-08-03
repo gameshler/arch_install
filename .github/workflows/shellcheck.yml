@@ -1,6 +1,9 @@
 name: Script Checks
 
 on:
+  push:
+    paths:
+      - "**/*.sh"
   pull_request:
     paths:
       - "**/*.sh"
