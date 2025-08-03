@@ -13,7 +13,7 @@
    - Creating Encrypted Volume and LVM Setup
    - Mounting the Partitions
 
-3. [System Bootstrapping](#System-Bootstraping)
+3. [System Bootstrapping](#System-Bootstrapping)
 
    - Pacman Setup and System Base Installation
    - Basic Configuration (Timezone, Locale, User Creation, etc.)
@@ -95,7 +95,7 @@ Following example assumes you have a nvme drive. Your drive may as well report a
 wipefs -fa /dev/nvme0n1
 ```
 
-You can use your favoruite tool, that supports creating the GPT partiton, for example `gdisk`:
+You can use your favorite tool, that supports creating the GPT partition, for example `gdisk`:
 
     +----------------------+----------------------+----------------------+----------------------+
     | EFI system partition |         LVM                                                        |
@@ -169,14 +169,14 @@ mount -a
 sudo chown -R $USER:$USER /mnt/storage # you can use `whoami` to check your system name
 ```
 
-## System Bootstraping
+## System Bootstrapping
 
 It seems pacman now requires PGP shenaningans, so first of all I had to execute:
 
         pacman-key --init
     pacman-key --populate
 
-_In the next step it is recommended to install CPU microcode package. Depending on whether you have intel of amd you should apend intel-ucode or amd-ucode to your pacstrap_
+_In the next step it is recommended to install CPU microcode package. Depending on whether you have intel of amd you should append intel-ucode or amd-ucode to your pacstrap_
 
 My pacstrap presents as follows:
 
@@ -335,7 +335,7 @@ Now you only have to add UEFI boot entry and create an order of booting:
 
 Now you can reboot and log into your system.
 
-:exclamation: :exclamation: :exclamation: **Compatilibity thing I noticed** :exclamation: :exclamation: :exclamation:
+:exclamation: :exclamation: :exclamation: **Compatibility thing I noticed** :exclamation: :exclamation: :exclamation:
 
 Some (older?) platforms can ignore entries by efibootmgr all together and just look for `EFI\BOOT\bootx64.efi`, in that case you may generate your UKI directly to that directory and under that name. It's very important that the name is also `bootx64.efi`.
 
@@ -412,7 +412,7 @@ Edit the `/etc/nftables.conf`. Proposed firewall rules:
 
 - drop all forwarding traffic (we're not a router),
 - allow loopback (127.0.0.0)
-- allow ICMP for v4 and v6 (you can turn it off, but for v6 it will dissable [SLAAC](<https://wiki.archlinux.org/title/IPv6#Stateless_autoconfiguration_(SLAAC)>)),
+- allow ICMP for v4 and v6 (you can turn it off, but for v6 it will disable [SLAAC](<https://wiki.archlinux.org/title/IPv6#Stateless_autoconfiguration_(SLAAC)>)),
 - allow returning packets for established connections,
 - ssh protection
 - block all else.
@@ -491,7 +491,7 @@ sysctl --system
 
 ## Password Manager
 
-My preffered solution is KeePass with their .kdbx format, that can be opened by multitude of programs and solutions.
+My preferred solution is KeePass with their .kdbx format, that can be opened by multitude of programs and solutions.
 
 For arch you can install local client, KeePassXC:
 
