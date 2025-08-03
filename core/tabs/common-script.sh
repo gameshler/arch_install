@@ -26,7 +26,7 @@ checkAurHelper() {
       return
     fi
     printf "%b\n" "Installing AUR helper: $helper"
-    mkdir -p $HOME/opt && cd $HOME/opt
+    mkdir -p "$HOME"/opt && cd "$HOME"/opt || exit
     if [[ ! -d yay-bin ]]; then
       git clone https://aur.archlinux.org/yay-bin.git
     fi
@@ -142,7 +142,7 @@ select_option() {
         ;;
       '[B') # Down arrow
         ((selected++))
-        if [ $selected -ge $num_options ]; then
+        if [ $selected -ge "$num_options" ]; then
           selected=0
         fi
         ;;
