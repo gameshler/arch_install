@@ -24,6 +24,7 @@ choose_directory() {
   local parent_stack=()
 
   while true; do
+    clear
     mapfile -t ENTRIES < <(find "$current_dir" -mindepth 1 -maxdepth 1 -print | sort)
 
     if [[ "${#ENTRIES[@]}" -eq 0 ]]; then
