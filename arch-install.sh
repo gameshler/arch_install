@@ -53,7 +53,7 @@ select_option() {
         ;;
       '[B') # Down arrow
         ((selected++))
-        if [ $selected -ge $num_options ]; then
+        if [ $selected -ge "$num_options" ]; then
           selected=0
         fi
         ;;
