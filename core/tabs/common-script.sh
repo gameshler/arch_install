@@ -26,13 +26,36 @@ checkAurHelper() {
       return
     fi
     printf "%b\n" "Installing AUR helper: $helper"
-    mkdir -p $HOME/opt && cd $HOME/opt
+    mkdir -p "$HOME"/opt && cd "$HOME"/opt || exit
     if [[ ! -d yay-bin ]]; then
       git clone https://aur.archlinux.org/yay-bin.git
     fi
     sudo chown -R "$USER":"$USER" ./yay-bin
     cd yay-bin && makepkg --noconfirm -si
   fi
+}
+checkFlatpak() {
+    if ! command_exists flatpak; then
+        printf "%b\n" "Installing Flatpak..."
+        case "$PACKAGER" in
+            pacman)
+                sudo "$PACKAGER" -S --needed --noconfirm flatpak
+                ;;
+            *)
+                sudo "$PACKAGER" install -y flatpak
+                ;;
+        esac
+        printf "%b\n" "Adding Flathub remote..."
+        sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+        printf "%b\n" "Applications installed by Flatpak may not appear on your desktop until the user session is restarted..."
+    else
+        if ! flatpak remotes | grep -q "flathub"; then
+            printf "%b\n" "Adding Flathub remote..."
+            sudo flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+        else
+            printf "%b\n" "Flatpak is installed"
+        fi
+    fi
 }
 
 install_packages() {
@@ -119,7 +142,7 @@ select_option() {
         ;;
       '[B') # Down arrow
         ((selected++))
-        if [ $selected -ge $num_options ]; then
+        if [ $selected -ge "$num_options" ]; then
           selected=0
         fi
         ;;
