@@ -71,7 +71,7 @@ systemctl enable --now reflector.timer
 checkAurHelper
 printf "%b\n" "Installing AUR packages with yay"
 install_packages "$helper" \
-  postman-bin brave-bin visual-studio-code-bin
+  insomnia-bin brave-bin visual-studio-code-bin
 
 if echo "${gpu_type}" | grep -E "NVIDIA|GeForce"; then
   # check if flatpak is installed
