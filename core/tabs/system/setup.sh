@@ -4,23 +4,6 @@ source "$COMMON_SCRIPT"
 
 set -euo pipefail
 
-select_country() {
-  echo -ne "
-    Please select your country code from this list"
-  # These are default key maps as presented in official arch repo archinstall
-  # shellcheck disable=SC1010
-  options=("AU" "AT" "BY" "BE" "BR" "BG" "CA" "CL" "CN" "CO" "CZ" "DK" "EC" "FI"
-    "FR" "DE" "GR" "HK" "HU" "IS" "IN" "ID" "IR" "IE" "IL" "IT" "JP" "KZ"
-    "LV" "LT" "LU" "MK" "NL" "NC" "NZ" "NO" "PL" "PT" "RO" "RU" "RS" "SG"
-    "SK" "ZA" "KR" "ES" "SE" "CH" "TW" "TH" "TR" "UA" "GB" "US" "VN")
-
-  select_option "${options[@]}"
-  country=${options[$?]}
-
-  echo -ne "Your country code is: ${country} \n"
-  export COUNTRY=$country
-}
-
 printf "%b\n" "Checking System Package Manager and AUR"
 
 sudo "$PACKAGER" -Syu --noconfirm
@@ -63,9 +46,8 @@ install_packages "$PACKAGER" \
   base-devel kate mangohud lib32-mangohud corectrl openssh dolphin \
   telegram-desktop htop discord steam reflector
 
-select_country
 cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
-reflector --verbose --protocol https -a 48 -c "$COUNTRY" --score 5 -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
+reflector --verbose --protocol https -a 48 -c "DE GB IL" --score 5 -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
 systemctl enable --now reflector.timer
 
 checkAurHelper
@@ -125,8 +107,8 @@ export NVM_DIR="$HOME/.nvm"
 # shellcheck source=/dev/null
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-printf "%b\n" "Installing Node.js v22 via nvm"
-nvm install 22
+printf "%b\n" "Installing Node.js v24 via nvm"
+nvm install 25
 nvm use stable
 node --version
 
@@ -151,9 +133,5 @@ done
 
 # Source .bashrc to apply changes
 source "$HOME/.bashrc" || true
-
-printf "%b\n" "Mounting Drives..."
-
-source "$AUTO_MOUNT" 
 
 printf "%b\n" "Setup completed successfully!"
