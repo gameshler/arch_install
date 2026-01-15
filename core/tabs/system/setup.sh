@@ -46,7 +46,7 @@ install_packages "$PACKAGER" \
   base-devel kate mangohud lib32-mangohud corectrl openssh dolphin \
   telegram-desktop htop discord steam reflector
 
-cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
+sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
 sudo reflector --verbose --protocol https -a 48 -c DE -c GB -c IL --score 5 -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
 systemctl enable --now reflector.timer
 
