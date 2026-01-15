@@ -3,8 +3,8 @@
 . "$COMMON_SCRIPT" 
 
 installLibreWolf() {
-    if ! command_exists thorium-browser; then
-        printf "%b\n" "Installing Thorium Browser..."
+    if ! command_exists io.gitlab.librewolf-community && ! command_exists librewolf; then
+        printf "%b\n" "Installing LibreWolf Browser..."
         case "$PACKAGER" in
             pacman)
                 "$helper" -S --needed --noconfirm librewolf-bin
