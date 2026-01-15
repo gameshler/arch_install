@@ -47,7 +47,7 @@ install_packages "$PACKAGER" \
   telegram-desktop htop discord steam reflector
 
 cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
-reflector --verbose --protocol https -a 48 -c "DE GB IL" --score 5 -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
+sudo reflector --verbose --protocol https -a 48 -c DE -c GB -c IL --score 5 -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
 systemctl enable --now reflector.timer
 
 checkAurHelper
