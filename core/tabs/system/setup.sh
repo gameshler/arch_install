@@ -115,9 +115,6 @@ node --version
 # pnpm global tools
 printf "%b\n" "Installing pnpm and global node modules"
 curl -fsSL https://get.pnpm.io/install.sh | sh -
-cd $HOME
-source .bashrc || true
-pnpm add -g license gitignore
 
 # Dotfiles array
 dotfiles=(.gitignore .gitconfig .bashrc)
@@ -131,5 +128,8 @@ for dotfile in "${dotfiles[@]}"; do
     echo "Warning: $src not found, skipping."
   fi
 done
+
+source "$HOME/.bashrc" || true 
+pnpm add -g license gitignore
 
 printf "%b\n" "Setup completed successfully!"
