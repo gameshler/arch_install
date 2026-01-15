@@ -129,7 +129,7 @@ for dotfile in "${dotfiles[@]}"; do
   fi
 done
 
-source "$HOME/.bashrc" || true 
+source $HOME/.bashrc || true 
 pnpm add -g license gitignore
 
 printf "%b\n" "Setup completed successfully!"
