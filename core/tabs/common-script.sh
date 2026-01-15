@@ -1,3 +1,7 @@
+#!/bin/sh -e
+
+# shellcheck disable=SC2034
+
 command_exists() {
   for cmd in "$@"; do
     command -v "$cmd" >/dev/null 2>&1 || return 1

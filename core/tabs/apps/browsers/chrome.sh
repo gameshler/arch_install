@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-source "$COMMON_SCRIPT" 
+. "$COMMON_SCRIPT" 
 
 installChrome() {
     if ! command_exists google-chrome; then

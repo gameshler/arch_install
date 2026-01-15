@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source "$COMMON_SCRIPT" 
+. "$COMMON_SCRIPT" 
 
 set -euo pipefail
 
@@ -104,7 +104,6 @@ export NVM_VERSION="v0.40.3"
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/"$NVM_VERSION"/install.sh | bash
 
 export NVM_DIR="$HOME/.nvm"
-# shellcheck source=/dev/null
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
 printf "%b\n" "Installing Node.js v24 via nvm"
@@ -115,7 +114,7 @@ node --version
 # pnpm global tools
 printf "%b\n" "Installing pnpm and global node modules"
 curl -fsSL https://get.pnpm.io/install.sh | sh -
-source $HOME/.bashrc || true 
+. "$HOME/.bashrc" || true 
 
 # Dotfiles array
 dotfiles=(.gitignore .gitconfig .bashrc)
@@ -130,7 +129,7 @@ for dotfile in "${dotfiles[@]}"; do
   fi
 done
 
-source $HOME/.bashrc || true 
+. "$HOME/.bashrc" || true 
 pnpm add -g license gitignore
 
 printf "%b\n" "Setup completed successfully!"

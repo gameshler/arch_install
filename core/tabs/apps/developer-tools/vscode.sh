@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-source "$COMMON_SCRIPT" 
+. "$COMMON_SCRIPT" 
 
 installVsCode() {
     if ! command_exists com.visualstudio.code && ! command_exists code; then

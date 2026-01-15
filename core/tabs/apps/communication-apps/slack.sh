@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-source "$COMMON_SCRIPT" 
+. "$COMMON_SCRIPT" 
 
 installSlack() {
     if ! command_exists com.slack.Slack && ! command_exists slack; then

@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-source "$COMMON_SCRIPT" 
+. "$COMMON_SCRIPT" 
 
 installDiscord() {
     if ! command_exists com.discordapp.Discord && ! command_exists discord; then

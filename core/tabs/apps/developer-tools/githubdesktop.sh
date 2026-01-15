@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-source "$COMMON_SCRIPT" 
+. "$COMMON_SCRIPT" 
 
 installGithubDesktop() {
     if ! command_exists github-desktop; then

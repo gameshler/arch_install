@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source "$COMMON_SCRIPT" 
+. "$COMMON_SCRIPT" 
 
 set -euo pipefail
 
@@ -11,7 +11,7 @@ cleanup_system() {
   case "$PACKAGER" in
   pacman)
     sudo "$PACKAGER" -Sc --noconfirm
-    sudo "$PACKAGER" -Rns $(pacman -Qtdq) --noconfirm >/dev/null || true
+    sudo "$PACKAGER" -Rns "$(pacman -Qtdq)" --noconfirm >/dev/null || true
     ;;
   *)
     printf "%b\n" "Unsupported package manager: ${PACKAGER}. Skipping."

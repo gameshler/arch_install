@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-source "$COMMON_SCRIPT" 
+. "$COMMON_SCRIPT" 
 
 installZoom() {
     if ! command_exists us.zoom.Zoom && ! command_exists zoom; then

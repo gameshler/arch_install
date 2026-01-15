@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-source "$COMMON_SCRIPT" 
+. "$COMMON_SCRIPT" 
 
 installBrave() {
     if ! command_exists com.brave.Browser && ! command_exists brave; then
