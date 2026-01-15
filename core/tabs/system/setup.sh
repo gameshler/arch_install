@@ -115,6 +115,7 @@ node --version
 # pnpm global tools
 printf "%b\n" "Installing pnpm and global node modules"
 curl -fsSL https://get.pnpm.io/install.sh | sh -
+source $HOME/.bashrc || true 
 
 # Dotfiles array
 dotfiles=(.gitignore .gitconfig .bashrc)
