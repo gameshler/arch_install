@@ -14,7 +14,7 @@ cloneNeovim() {
 
 installNeovim() {
     if ! command_exists neovim ripgrep git fzf; then
-        printf "%b\n" "Installing Github Desktop..."
+        printf "%b\n" "Installing Neovim..."
         case "$PACKAGER" in
             pacman)
                 sudo "$PACKAGER" -S --needed --noconfirm neovim ripgrep fzf luarocks shellcheck git
