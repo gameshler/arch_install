@@ -149,3 +149,5 @@ for dotfile in "${dotfiles[@]}"; do
 done
 
 printf "%b\n" "Setup completed successfully!"
+
+exec bash -l 
