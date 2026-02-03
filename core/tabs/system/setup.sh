@@ -110,7 +110,6 @@ export NVM_DIR="$HOME/.nvm"
 printf "%b\n" "Installing Node.js v25 via nvm"
 nvm install 25
 nvm alias default 25
-node use 25
 
 # pnpm global tools
 printf "%b\n" "Installing pnpm and global node modules"
