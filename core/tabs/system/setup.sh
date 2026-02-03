@@ -43,17 +43,14 @@ fi
 install_packages "$PACKAGER" \
   libreoffice-fresh vlc curl flatpak fastfetch p7zip unrar tar rsync \
   exfat-utils fuse-exfat flac jdk-openjdk gimp \
-  base-devel kate mangohud lib32-mangohud corectrl openssh dolphin \
-  telegram-desktop htop discord steam reflector git
+  base-devel mangohud lib32-mangohud corectrl openssh \
+  htop steam reflector git
 
 sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
 sudo reflector --verbose --protocol https -a 48 -c DE -c GB --score 5 -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
 systemctl enable --now reflector.timer
 
 checkAurHelper
-printf "%b\n" "Installing AUR packages with yay"
-install_packages "$helper" \
-  librewolf-bin visual-studio-code-bin
 
 if echo "${gpu_type}" | grep -E "NVIDIA|GeForce"; then
   # check if flatpak is installed
