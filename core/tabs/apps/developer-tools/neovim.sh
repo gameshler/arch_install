@@ -13,7 +13,7 @@ cloneNeovim() {
 }
 
 installNeovim() {
-    if ! command_exists neovim ripgrep git fzf lua; then
+    if ! command_exists nvim ripgrep git fzf lua; then
         printf "%b\n" "Installing Neovim..."
         case "$PACKAGER" in
             pacman)
