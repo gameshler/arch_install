@@ -4,6 +4,39 @@
 
 set -euo pipefail
 
+choose_installation() {
+
+  local options=("AU" "AT" "BY" "BE" "BR" "BG" "CA" "CL" "CN" "CO" "CZ" "DK" "EC" "FI"
+                 "FR" "DE" "GR" "HK" "HU" "IS" "IN" "ID" "IR" "IE" "IL" "IT" "JP" "KZ"
+                 "LV" "LT" "LU" "MK" "NL" "NC" "NZ" "NO" "PL" "PT" "RO" "RU" "RS" "SG"
+                 "SK" "ZA" "KR" "ES" "SE" "CH" "TW" "TH" "TR" "UA" "GB" "US" "VN")
+
+  printf "Please select your country:\n"
+
+  local i=1
+  for code in "${options[@]}"; do
+    printf "%2d) %s\n" "$i" "$code"
+    ((i++))
+  done
+
+  local choice
+  while :; do
+    printf "Enter your choice (1-%d): " "${#options[@]}"
+    read -r choice
+
+    if [[ "$choice" =~ ^[0-9]+$ ]] && (( choice >= 1 && choice <= ${#options[@]} )); then
+      break
+    fi
+    echo "Invalid choice, please try again."
+  done
+
+  local index=$((choice - 1))
+  COUNTRY_CODE="${options[$index]}"
+
+  echo "You selected: $COUNTRY_CODE"
+}
+
+
 printf "%b\n" "Checking System Package Manager and AUR"
 
 sudo "$PACKAGER" -Syu --noconfirm
@@ -46,8 +79,9 @@ install_packages "$PACKAGER" \
   base-devel mangohud lib32-mangohud corectrl openssh \
   htop steam reflector git
 
+choose_installation
 sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
-sudo reflector --verbose --protocol https -a 48 -c DE -c GB --score 5 -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
+sudo reflector --verbose --protocol https -a 48 -c $COUNTRY_CODE --score 5 -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
 systemctl enable --now reflector.timer
 
 checkAurHelper
