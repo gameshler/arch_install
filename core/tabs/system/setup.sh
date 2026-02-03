@@ -147,5 +147,5 @@ for dotfile in "${dotfiles[@]}"; do
     echo "Warning: $src not found, skipping."
   fi
 done
-exec bash -l 
+
 printf "%b\n" "Setup completed successfully!"
