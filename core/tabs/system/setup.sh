@@ -112,7 +112,7 @@ nvm install 25
 nvm alias default 25
 
 # pnpm global tools
-printf "%b\n" "Installing pnpm and global node modules"
+printf "%b\n" "Installing pnpm"
 curl -fsSL https://get.pnpm.io/install.sh | sh -
 export PNPM_HOME="$HOME/.local/share/pnpm"
 
@@ -147,5 +147,5 @@ for dotfile in "${dotfiles[@]}"; do
     echo "Warning: $src not found, skipping."
   fi
 done
-
+exec bash -l 
 printf "%b\n" "Setup completed successfully!"
