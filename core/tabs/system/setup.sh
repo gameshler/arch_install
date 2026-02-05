@@ -61,16 +61,16 @@ printf "%b\n" "Installing packages"
 gpu_type=$(lspci | grep -E "VGA|3D|Display")
 if echo "${gpu_type}" | grep -E "NVIDIA|GeForce"; then
     echo "Installing NVIDIA drivers: nvidia-lts"
-    "$PACKAGER" -S --noconfirm --needed nvidia-lts
+    sudo "$PACKAGER" -S --noconfirm --needed nvidia-lts
 elif echo "${gpu_type}" | grep 'VGA' | grep -E "Radeon|AMD"; then
     echo "Installing AMD drivers: xf86-video-amdgpu"
-    "$PACKAGER" -S --noconfirm --needed vulkan-radeon lib32-vulkan-radeon
+    sudo "$PACKAGER" -S --noconfirm --needed vulkan-radeon lib32-vulkan-radeon
 elif echo "${gpu_type}" | grep -E "Integrated Graphics Controller"; then
     echo "Installing Intel drivers:"
-    "$PACKAGER" -S --noconfirm --needed libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa
+    sudo "$PACKAGER" -S --noconfirm --needed libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa
 elif echo "${gpu_type}" | grep -E "Intel Corporation UHD"; then
     echo "Installing Intel UHD drivers:"
-    "$PACKAGER" -S --noconfirm --needed libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa
+    sudo "$PACKAGER" -S --noconfirm --needed libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa
 fi
 
 install_packages "$PACKAGER" \
