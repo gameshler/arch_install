@@ -39,11 +39,12 @@
 
    - Installing KeePassXC for Password Management
 
-8. [KDE Plasma Installation on Arch Linux](#KDE-Plasma-Installation)
+8. [KDE Plasma Installation / Arch DWM on Arch Linux](#KDE-Plasma-Installation)
 
    - Installing KDE Plasma Desktop Environment
    - Wayland Session Setup
    - Creating Custom Login Manager Script
+   - Arch DWM
 
 9. [Arch Linux Setup Guide](#Arch-Linux-Setup-Guide)
 
