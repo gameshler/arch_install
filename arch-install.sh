@@ -2,8 +2,8 @@
 set -euo pipefail
 
 # CONFIG - EDIT THESE
-DISK="/dev/nvme0n1" UCODE="amd-ucode" HOSTNAME="arch-secure" USERNAME="gameshler"
-LOCALE="en_GB.UTF-8" TIMEZONE="Asia/Jerusalem" ROOT_PASS="changeme_root" USER_PASS="changeme_user"
+DISK="your disk" UCODE="amd-ucode or intel-ucode" HOSTNAME="pc-name" USERNAME="username"
+LOCALE="your locale" TIMEZONE="Region/Area" ROOT_PASS="changeme_root" USER_PASS="changeme_user"
 
 echo "Disk: $DISK | Host: $HOSTNAME | User: $USERNAME | Confirm? (y/N): " && read -r c && [[ $c =~ ^[Yy]$ ]] || exit 1
 
