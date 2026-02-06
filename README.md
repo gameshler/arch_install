@@ -533,6 +533,44 @@ nano /kde_plasma.sh
 chmod +x kde_plasma.sh
 ```
 
+# Arch DWM
+
+Follow these steps to install and run **DWM** on Arch Linux. This guide assumes `sudo` privileges and a clean system.
+
+## installing desktop env
+
+```
+git clone https://git.suckless.org/dwm
+git clone https://git.suckless.org/st
+
+```
+
+```
+sudo pacman -Sy xorg-server xorg-xinit libx11 libxinerama libxft webkit2gtk
+```
+
+## login manager
+
+```
+vim .xinitrc
+
+exec dwm 
+```
+
+- cd into st
+- ```
+  sudo make clean install 
+  ```
+- cd into dwm
+- ```
+  sudo make clean install 
+  ```
+- vim into .bash_profile 
+  ```
+    startx
+  ```
+
+
 # Arch Linux Setup Guide
 
 > you can install everything with one script using
