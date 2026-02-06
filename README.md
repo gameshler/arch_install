@@ -140,7 +140,7 @@ After all is done we need to mount our drives:
 
 > If you have more than one drive you can use `automount.sh`, make sure to gdisk before using it:
 
-> you can use `wipefs` and `gdisk` if needed and make sure they are setup as default (if the drive has data dont use neither wipefs nor gdisk)
+> you can use `wipefs`,`gdisk` and mkfs your preferred fs type if needed and make sure they are setup as default (if the drive has data dont use neither wipefs nor gdisk)
 
     mkfs.ext4 -L Storage /dev/nvme1n1p1
     mkdir -p /mnt/storage
