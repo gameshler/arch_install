@@ -95,5 +95,5 @@ main() {
     *) printf "%b\n" "Invalid choice." && exit 1 ;;
     esac
 }
-
+checkEnv
 main

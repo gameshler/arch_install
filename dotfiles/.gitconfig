@@ -1,6 +1,6 @@
 [user]
 name = gameshler
 [core]
-editor = nano
+editor = neovim
 [init]
 defaultBranch = main

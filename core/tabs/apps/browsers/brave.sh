@@ -11,4 +11,5 @@ installBrave() {
     fi
 }
 
+checkEnv
 installBrave

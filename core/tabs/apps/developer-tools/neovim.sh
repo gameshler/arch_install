@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-. "$COMMON_SCRIPT" 
+. "$COMMON_SCRIPT"
 
 cloneNeovim() {
     if [ -z "${TEMP_DIR:-}" ] || [ ! -d "$TEMP_DIR" ]; then
@@ -16,13 +16,13 @@ installNeovim() {
     if ! command_exists nvim ripgrep git fzf lua; then
         printf "%b\n" "Installing Neovim..."
         case "$PACKAGER" in
-            pacman)
-                sudo "$PACKAGER" -S --needed --noconfirm neovim ripgrep fzf luarocks shellcheck git lua
-                ;;
-            *)
-                printf "%b\n" "Unsupported package manager: ""$PACKAGER"
-                exit 1
-                ;;
+        pacman)
+            sudo "$PACKAGER" -S --needed --noconfirm neovim ripgrep fzf luarocks shellcheck git lua
+            ;;
+        *)
+            printf "%b\n" "Unsupported package manager: ""$PACKAGER"
+            exit 1
+            ;;
         esac
     else
         printf "%b\n" "Neovim is already installed."
@@ -37,7 +37,7 @@ linkNeovimConfig() {
     cp -r "$TEMP_DIR/neovim/lazy-lock.json" "$HOME/.config/nvim/"
 
 }
-
+checkEnv
 installNeovim
 cloneNeovim
 linkNeovimConfig

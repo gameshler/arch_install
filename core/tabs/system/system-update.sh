@@ -4,44 +4,44 @@
 
 fastUpdate() {
     case "$PACKAGER" in
-        pacman)
-            install_packages "$helper" rate-mirrors-bin
+    pacman)
+        install_packages "$helper" rate-mirrors-bin
 
-            printf "%b\n" "Generating a new list of mirrors using rate-mirrors. This process may take a few seconds..."
+        printf "%b\n" "Generating a new list of mirrors using rate-mirrors. This process may take a few seconds..."
 
-            if [ -s "/etc/pacman.d/mirrorlist" ]; then
-                sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
-            fi
+        if [ -s "/etc/pacman.d/mirrorlist" ]; then
+            sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
+        fi
 
-            dtype_local="${DTYPE:-arch}"
-            echo "Using rate-mirrors with distro: $dtype_local"
+        dtype_local="${DTYPE:-arch}"
+        echo "Using rate-mirrors with distro: $dtype_local"
 
-            if ! sudo rate-mirrors --top-mirrors-number-to-retest=5 --disable-comments --save /etc/pacman.d/mirrorlist --allow-root "$dtype_local" > /dev/null || [ ! -s "/etc/pacman.d/mirrorlist" ]; then
-                printf "%b\n" "Rate-mirrors failed, restoring backup."
-                sudo cp /etc/pacman.d/mirrorlist.bak /etc/pacman.d/mirrorlist
+        if ! sudo rate-mirrors --top-mirrors-number-to-retest=5 --disable-comments --save /etc/pacman.d/mirrorlist --allow-root "$dtype_local" >/dev/null || [ ! -s "/etc/pacman.d/mirrorlist" ]; then
+            printf "%b\n" "Rate-mirrors failed, restoring backup."
+            sudo cp /etc/pacman.d/mirrorlist.bak /etc/pacman.d/mirrorlist
 
-                printf "%b\n" "Rate-mirrors failed, restoring backup."
-                sudo cp /etc/pacman.d/mirrorlist.bak /etc/pacman.d/mirrorlist
-            fi
-            ;;
-        *)
-            printf "%b\n" "Unsupported package manager: ${PACKAGER}"
-            exit 1
-            ;;
+            printf "%b\n" "Rate-mirrors failed, restoring backup."
+            sudo cp /etc/pacman.d/mirrorlist.bak /etc/pacman.d/mirrorlist
+        fi
+        ;;
+    *)
+        printf "%b\n" "Unsupported package manager: ${PACKAGER}"
+        exit 1
+        ;;
     esac
 }
 
 updateSystem() {
     printf "%b\n" "Updating system packages."
     case "$PACKAGER" in
-        pacman)
-            sudo "$PACKAGER" -Sy --noconfirm --needed archlinux-keyring
-            "$helper" -Su --noconfirm
-            ;;
-        *)
-            printf "%b\n" "Unsupported package manager: ${PACKAGER}"
-            exit 1
-            ;;
+    pacman)
+        sudo "$PACKAGER" -Sy --noconfirm --needed archlinux-keyring
+        "$helper" -Su --noconfirm
+        ;;
+    *)
+        printf "%b\n" "Unsupported package manager: ${PACKAGER}"
+        exit 1
+        ;;
     esac
 }
 
@@ -51,8 +51,8 @@ updateFlatpaks() {
         flatpak update -y
     fi
 }
-
-checkAurHelper
+checkEnv
 fastUpdate
 updateSystem
 updateFlatpaks
+
