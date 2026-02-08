@@ -16,7 +16,7 @@
 3. [System Bootstrapping](#System-Bootstrapping)
 
    - Pacman Setup and System Base Installation
-   - Basic Configuration (Timezone, Locale, User Creation, etc.)
+   - Basic Configuration (Timezone, Locale, Users)
 
 4. [Unified Kernel Image (UKI) Setup](#Unified-Kernel-Image)
 
@@ -37,110 +37,106 @@
 
 7. [Password Manager](#Password-Manager)
 
-   - Installing KeePassXC for Password Management
+   - KeePassXC Installation and Setup
+   
+8. [Desktop Environment](#Desktop-Environment-Setup)
 
-8. [KDE Plasma Installation / Arch DWM on Arch Linux](#KDE-Plasma-Installation)
+   - [KDE Plasma](#KDE-Plasma)
+   - [Arch DWM](#Arch-DWM)
 
-   - Installing KDE Plasma Desktop Environment
-   - Wayland Session Setup
-   - Creating Custom Login Manager Script
-   - Arch DWM
+9. [Applications and Packages](#Applications-and-Packages)
 
-9. [Arch Linux Setup Guide](#Arch-Linux-Setup-Guide)
-
-   - Automating Installation with a Script
-
-10. [Applications and Packages](#Applications-and-Packages)
-
-    - Essential Applications Installation
+    - Essential Applications 
     - Yay AUR Helper Setup
     - System Configuration and Tweaks
 
-11. [Additional Tools and Configurations](#Additional-Tools-and-Configuration)
+10. [Additional Tools and Configurations](#Additional-Tools-and-Configuration)
     - CoreCtrl, MangoHud, and Node.js Setup
-    - Github SSH Setup and Global Modules
+    - Github SSH Setup and Global Node Modules
 
 # Introduction
 
-A walkthrough installation guide for a secure arch linux based system.
+This guide provides a step-by-step installation for a secure, encrypted Arch Linux system running under UEFI with optional Secure Boot support and a choice between KDE Plasma or DWM environments.
 
-**Check this list before starting!**
+**Pre-requisites**
 
-- Your computer supports SecureBoot/UEFI
-- Your computer allows for enrollment of your own secureboot keys
-- Your computer does not have manufacturer's backdoors
+Before you begin, ensure:
+- Your system supports **UEFI** and **Secure Boot**.
+- You can enroll your own Secure Boot keys.
+- You are aware of manufacturer firmware features or potential backdoors.
 
-## Preparing USB and booting the installer
+## Preparing the Installation Media
 
-Download the latest Archlinux ISO and copy it to your USB:
+Download the latest official [Archlinux ISO](https://archlinux.org/download/) and flash it to a USB drive:
 
     sudo dd if=/path/to/file.iso of=/dev/sdX status=progress
     sync
 
-Reboot your machine and if enabled, disable secureboot in BIOS. After that, boot ArchLinux USB.
+Reboot and boot the USB through UEFI mode. If Secure Boot is enabled, disable it temporarily in BIOS for installation.
 
-When your installer has booted, especially on laptop, you may want to enable WiFi connection:
+## Connecting to Wi-Fi (Optional)
+
+If on a laptop, start `iwctl`:
 
     iwctl
     station wlan0 connect SSID
-    <password prompt>
+    # Enter password when prompted
     exit
 
 ## Disk Partitioning
 
-Following example assumes you have a nvme drive. Your drive may as well report as /dev/sdX.
+> [!NOTE]  
+> Adjust device paths (/dev/nvme0n1, /dev/sda, etc.) as appropriate for your system. Use `lsblk` to confirm.
 
-> Before doing anything make sure you have a wiped drive: `lsblk` if needed
+**Wiping and Creating the Partition Table**
 
-```
+Wipe existing data and create a new GPT:
+
+```bash
 wipefs -fa /dev/nvme0n1
+gdisk /dev/nvme0n1
+```
+**Example Layout:**
+
+| Partition     | Description            | Mount Point   | Size       | Type Code
+| ------------- |----------------------  |-------------  |------------|----------
+| /dev/nvme0n1p1| EFI System Partition   | /dev/vg/root  | 1024MB (1G)| EF00
+| /dev/nvme0n1p2| LUKS2 Encrypted Volume | /             | Remaining  | 8309
+
+Format the EFI partition:
+
+```bash
+mkfs.fat -F32 /dev/nvme0n1p1
 ```
 
-You can use your favorite tool, that supports creating the GPT partition, for example `gdisk`:
+**Creating Encrypted Volume and LVM**
 
-    +----------------------+----------------------+----------------------+----------------------+
-    | EFI system partition |         LVM                                                        |
-    |                      |                                                                    |
-    | /efi                 |         /                                                          |
-    |                      |                                                                    |
-    | /dev/nvme0n1p1       |         /dev/vg/root                                               |
-    |                      |----------------------+----------------------+----------------------+
-    | unencrypted          | /dev/nvme0n1p2 encrypted using LUKS2                               |
-    +----------------------+--------------------------------------------------------------------+
+```bash
+cryptsetup luksFormat --type luks2 /dev/nvme0n1p2
+cryptsetup open --allow-discards --persistent /dev/nvme0n1p2 cryptlvm
+```
 
-My partition sizes and used partition codes look like this:
+Create and configure LVM inside the encrypted container:
 
-    /dev/nvme0n1p1 - EFI - 1024MB;				partition code EF00
-    /dev/nvme0n1p2 - encrypted LUKS - remaining space;	partition code 8309
+```bash
+pvcreate /dev/mapper/cryptlvm
+vgcreate vg /dev/mapper/cryptlvm
+lvcreate -l 100%FREE vg -n root
+mkfs.ext4 /dev/vg/root
+```
 
-The lack of SWAP partition is intentional; if you need it, you can configure SWAP as file in your filesystem later.
+**Mounting Partitions**
 
-We also need to format EFI partition:
+```bash
+mount /dev/vg/root /mnt
+mkdir -p /mnt/boot/efi
+mount /dev/nvme0n1p1 /mnt/boot/efi
+```
 
-    mkfs.fat -F32 /dev/nvme0n1p1
-
-Now we can create encrypted volume and open it:
-
-    cryptsetup luksFormat --type luks2 /dev/nvme0n1p2
-    cryptsetup open --allow-discards --persistent /dev/nvme0n1p2 cryptlvm
-
-Configuring LVM and formatting root partition:
-
-    pvcreate /dev/mapper/cryptlvm
-    vgcreate vg /dev/mapper/cryptlvm
-    lvcreate -l 100%FREE vg -n root
-
-    mkfs.ext4 /dev/vg/root
-
-After all is done we need to mount our drives:
-
-    mount /dev/vg/root /mnt
-    mkdir -p /mnt/boot/efi
-    mount /dev/nvme0n1p1 /mnt/boot/efi
-
-> If you have more than one drive you can use `automount.sh`, make sure to gdisk before using it:
-
-> you can use `wipefs`,`gdisk` and mkfs your preferred fs type if needed and make sure they are setup as default (if the drive has data dont use neither wipefs nor gdisk)
+> [!NOTE]  
+> If you have additional storage drives, repeat the process as needed.
+> you can use `auto-mount.sh` later, make sure to use `wipefs`, `gdisk` and `mkfs`
+> if the drive has data dont use neither wipefs nor gdisk
 
     mkfs.ext4 -L Storage /dev/nvme1n1p1
     mkdir -p /mnt/storage
@@ -172,81 +168,88 @@ sudo chown -R $USER:$USER /mnt/storage # you can use `whoami` to check your syst
 
 ## System Bootstrapping
 
-It seems pacman now requires PGP shenaningans, so first of all I had to execute:
+**Pacman Key Setup**
 
-        pacman-key --init
-    pacman-key --populate
+Initialize and populate keys:
 
-_In the next step it is recommended to install CPU microcode package. Depending on whether you have intel of amd you should append intel-ucode or amd-ucode to your pacstrap_
+```bash
+pacman-key --init
+pacman-key --populate
+```
 
-My pacstrap presents as follows:
+**Base System Installation**
 
-    pacstrap /mnt base linux linux-firmware YOUR_UCODE_PACKAGE sudo vim nano konsole lvm2 dracut sbsigntools iwd git ntfs-3g efibootmgr binutils networkmanager pacman
+Install essential packages:
 
-Generate fstab:
+> [!IMPORTANT]  
+> UCODE package depends on your cpu whether its amd or intel 
 
-    genfstab -U /mnt >> /mnt/etc/fstab
+```bash
+pacstrap /mnt base linux linux-firmware amd-ucode sudo vim nano konsole lvm2 dracut sbsigntools iwd git ntfs-3g efibootmgr binutils networkmanager pacman
+```
 
-Now you can chroot to your system and perform some basic configuration:
+Generate `fstab`:
 
-    arch-chroot /mnt
+```bash
+genfstab -U /mnt >> /mnt/etc/fstab
+```
 
-Set the root password:
+**System Configuration**
+  
+```bash
+arch-chroot /mnt
+passwd # root password
+```
 
-    passwd
+Set timezone and locale:
 
-My suggestion is to also install man for additional help you may require:
+```bash
+ln -sf /usr/share/zoneinfo/<Region>/<city> /etc/localtime
+hwclock --systohc
+vim /etc/locale.gen # uncomment locales you want
+locale-gen
+echo "LANG=en_GB.UTF-8" > /etc/locale.conf
 
-    pacman -Syu man-db
+```
 
-Set timezone and generate /etc/adjtime:
+Keyboard layout and hostname:
 
-    ln -sf /usr/share/zoneinfo/<Region>/<city> /etc/localtime
-    hwclock --systohc
-
-Set your desired locale:
-
-    vim /etc/locale.gen # uncomment locales you want
-    locale-gen
-
-    vim /etc/locale.conf
-    	LANG=en_GB.UTF-8
-
-Configure your keyboard layout:
-
-    vim /etc/vconsole.conf
+```bash
+vim /etc/vconsole.conf
     	KEYMAP=us
     	FONT=Lat2-Terminus16
     	FONT_MAP=8859-1
-
-Set your hostname:
-
-    vim /etc/hostname
-
-Create your user:
-
-    useradd -m YOUR_NAME
-    passwd YOUR_NAME
-
-Add your user to sudo:
-
-    visudo
-    	%wheel	ALL=(ALL) ALL # Uncomment this line
-
-    usermod -aG wheel YOUR_NAME
-
-Enable some basic systemd units:
-
+echo "myhostname" > /etc/hostname
 ```
- systemctl enable NetworkManager # Letter case is important !!!!!!
- systemctl enable fstrim.timer
+
+Create user and configure sudo:
+
+```bash
+useradd -m username
+passwd username
+visudo
+    	%wheel	ALL=(ALL) ALL # Uncomment this line
+usermod -aG wheel username
+```
+
+Enable essential services:
+
+```bash
+systemctl enable NetworkManager fstrim.timer
 ```
 
 ## Unified Kernel Image
 
-Create dracut scripts that will hook into pacman:
+> Integrate UKI builds with dracut and pacman hooks for auto-regeneration on kernel updates.
 
-    vim /usr/local/bin/dracut-install.sh
+**Dracut Configuration**
+
+Configuring Dracut to hook into pacman:
+
+Dracut Install:
+
+```bash
+vim /usr/local/bin/dracut-install.sh
 
     	#!/usr/bin/env bash
 
@@ -260,22 +263,28 @@ Create dracut scripts that will hook into pacman:
     			dracut --force --uefi --kver "$kver" /boot/efi/EFI/Linux/bootx64.efi
     		fi
     	done
+```
 
-And the removal script:
+Dracut Remove:
 
-    vim /usr/local/bin/dracut-remove.sh
+```bash
+vim /usr/local/bin/dracut-remove.sh
 
     	#!/usr/bin/env bash
      	rm -f /boot/efi/EFI/Linux/bootx64.efi
+chmod +x /usr/local/bin/dracut-*
+```
 
-Make those scripts executable and create pacman's hook directory:
+**Pacman Hook Configuration**
 
-    chmod +x /usr/local/bin/dracut-*
-    mkdir /etc/pacman.d/hooks
+```bash
+mkdir /etc/pacman.d/hooks
+```
 
-Now the actual hooks, first for the install and upgrade:
+Dracut Install Hook: 
 
-     vim /etc/pacman.d/hooks/90-dracut-install.hook
+```bash
+ vim /etc/pacman.d/hooks/90-dracut-install.hook
 
     	[Trigger]
     	Type = Path
@@ -289,10 +298,12 @@ Now the actual hooks, first for the install and upgrade:
     	Exec = /usr/local/bin/dracut-install.sh
     	Depends = dracut
     	NeedsTargets
+```
 
-And for removal:
+Dracut Remove Hook:
 
-    vim /etc/pacman.d/hooks/60-dracut-remove.hook
+```bash
+vim /etc/pacman.d/hooks/60-dracut-remove.hook
 
     	[Trigger]
     	Type = Path
@@ -304,73 +315,85 @@ And for removal:
     	When = PreTransaction
     	Exec = /usr/local/bin/dracut-remove.sh
     	NeedsTargets
+```
 
-Check UUID of your encrypted volume and write it to file you will edit next:
+**Kernel Argument Configuration**
 
-    blkid -s UUID -o value /dev/nvme0n1p2 >> /etc/dracut.conf.d/cmdline.conf
-
-Edit the file and fill with with kernel arguments:
-
-    vim /etc/dracut.conf.d/cmdline.conf
+```bash
+blkid -s UUID -o value /dev/nvme0n1p2 >> /etc/dracut.conf.d/cmdline.conf
+vim /etc/dracut.conf.d/cmdline.conf
     	kernel_cmdline="rd.luks.uuid=luks-YOUR_UUID rd.lvm.lv=vg/root root=/dev/mapper/vg-root rootfstype=ext4 rootflags=rw,relatime"
+```
 
-Create file with flags:
+Dracut flags: 
 
-    vim /etc/dracut.conf.d/flags.conf
+```bash
+vim /etc/dracut.conf.d/flags.conf
     	compress="zstd"
     	hostonly="no"
+```
 
-Generate your image by re-installing `linux` package and making sure the hooks work properly:
+**Generate Linux Image**
 
-    pacman -S linux
+```bash
+pacman -S linux
+```
 
-> You should have `bootx64.efi` within your `/efi/EFI/Linux/`
-> note: you can check for bootx64.efi to make sure its setup correctly ls -alh /boot/efi/EFI/Linux
+> [!NOTE]  
+> You should have `bootx64.efi` within your `/efi/EFI/Linux/`,
+> you can check for bootx64.efi to make sure its setup correctly `ls -alh /boot/efi/EFI/Linux`
 
-Now you only have to add UEFI boot entry and create an order of booting:
+**UEFI Boot Entry**
 
-    efibootmgr --create --disk /dev/nvme0n1 --part 1 --label "Arch Linux" --loader 'EFI\Linux\bootx64.efi' --unicode
+```bash
+efibootmgr --create --disk /dev/nvme0n1 --part 1 --label "Arch Linux" --loader 'EFI\Linux\bootx64.efi' --unicode
+```
+Check and reorder entries as needed:
 
-    efibootmgr 		# Check if you have left over UEFI entries, remove them with efibootmgr -b INDEX -B and note down Arch index
-    efibootmgr -o ARCH_INDEX_FROM_PREVIOUS_COMMAND # 0 or whatever number your Arch entry shows as
+```bash
+efibootmgr
+efibootmgr -b INDEX -B # removes previous uefi arch boot entries 
+```
 
-Now you can reboot and log into your system.
-
-:exclamation: :exclamation: :exclamation: **Compatibility thing I noticed** :exclamation: :exclamation: :exclamation:
-
-Some (older?) platforms can ignore entries by efibootmgr all together and just look for `EFI\BOOT\bootx64.efi`, in that case you may generate your UKI directly to that directory and under that name. It's very important that the name is also `bootx64.efi`.
+reboot and login to your system.
 
 ## SecureBoot Configuration
 
-At this point you should enable Setup Mode for SecureBoot in your BIOS, and erase your existing keys (it may spare you setting attributes for efi vars in OS). If your system does not offer reverting to default keys (useful if you want to install windows later), you should backup them, though this will not be described here.
+Enable Setup Mode in BIOS and erase old keys. Use sbctl to sign binaries.
 
-Configuring SecureBoot is easy with sbctl:
+```bash
+pacman -S sbctl
+```
+Ensure Secure Boot is in Setup Mode:
 
-    pacman -S sbctl
-
-Check your status, setup mode should be enabled (You can do that in BIOS):
-
-    sbctl status
+```bash
+sbctl status
       Installed:      ✘ Sbctl is not installed
       Setup Mode:     ✘ Enabled
       Secure Boot:    ✘ Disabled
+```
 
-Create keys and sign binaries:
-note: use sudo su - for root
+```bash
+sbctl create-keys
+sbctl sign -s /boot/efi/EFI/Linux/bootx64.efi
+```
 
-    sbctl create-keys
-    sbctl sign -s /boot/efi/EFI/Linux/bootx64.efi #it should be single file with name verying from kernel version
-    ls /var/lib/sbctl/keys/db # make sure db.key and db.pem are available
+> [!NOTE]  
+> make sure db.key and db.pem are available `ls /var/lib/sbctl/keys/db` 
 
-Configure dracut to know where are signing keys:
+**Dracut Secure Boot Configuration:** 
 
-    vim /etc/dracut.conf.d/secureboot.conf
+```bash
+vim /etc/dracut.conf.d/secureboot.conf
     	uefi_secureboot_cert="/var/lib/sbctl/keys/db/db.pem"
     	uefi_secureboot_key="/var/lib/sbctl/keys/db/db.key"
+```
 
-We also need to fix sbctl's pacman hook. Creating the following file will overshadow the real one:
+> [!IMPORTANT]  
+> Fix needed for sbctl's pacman hook. Creating the following file will overshadow the real one
 
-    vim /etc/pacman.d/hooks/zz-sbctl.hook
+```bash
+ vim /etc/pacman.d/hooks/zz-sbctl.hook
     	[Trigger]
     	Type = Path
     	Operation = Install
@@ -386,24 +409,28 @@ We also need to fix sbctl's pacman hook. Creating the following file will oversh
     	Description = Signing EFI binaries...
     	When = PostTransaction
     	Exec = /usr/bin/sbctl sign /boot/efi/EFI/Linux/bootx64.efi
+```
 
-Enroll previously generated keys (drop microsoft option if you don't want their keys):
+Enroll previously generated keys:
+```bash
+sbctl enroll-keys --microsoft
+```
+> [!IMPORTANT]
+> Reboot the system. Enable only UEFI boot and Secure Boot in BIOS and set BIOS password,
 
-    sbctl enroll-keys --microsoft
+ensure secure boot is active:
 
-Reboot the system. Enable only UEFI boot in BIOS and set BIOS password so evil maid won't simply turn off the setting. If everything went fine you should first of all, boot into your system, and then verify with sbctl or bootctl:
-
-    sbctl status
+```bash
+sbctl status
       Installed:	✓ sbctl is installed
       Owner GUID:	YOUR_GUID
       Setup Mode:	✓ Disabled
       Secure Boot:	✓ Enabled
+```
 
 ## Firewall Configuration
 
-I'm goning to use nftables. Most distros started switching to it and it streamlines persistence compared to iptables.
-
-Install nftables:
+Use `nftables` for modern firewall management.
 
 ```
 pacman -S nftables
@@ -418,7 +445,7 @@ Edit the `/etc/nftables.conf`. Proposed firewall rules:
 - ssh protection
 - block all else.
 
-```
+```bash
 #!/usr/bin/nft -f
 
 destroy table inet filter
@@ -453,7 +480,7 @@ table inet filter {
 
 Enable the nftables service and list loaded rules for confirmation:
 
-```
+```bash
 systemctl enable --now nftables
 
 nft list ruleset
@@ -463,7 +490,7 @@ nft list ruleset
 
 Since firewall allows ICMP traffic, it may be a good idea to disable some network options. Edit your `/etc/sysctl.d/90-network.conf`:
 
-```
+```bash
 # Do not act as a router
 net.ipv4.ip_forward = 0
 net.ipv6.conf.all.forwarding = 0
@@ -486,111 +513,91 @@ net.ipv4.conf.default.send_redirects = 0
 
 Load your new rules with:
 
-```
+```bash
 sysctl --system
 ```
 
-## Password Manager
+## Password Manager (Optional)
 
-My preferred solution is KeePass with their .kdbx format, that can be opened by multitude of programs and solutions.
+Install KeePassXC:
 
-For arch you can install local client, KeePassXC:
-
-```
+```bash
 pacman -S keepassxc
 ```
 
-# KDE Plasma Installation
+# Desktop Environment Setup
 
-Follow these steps to install and run **KDE Plasma** with a **Wayland session** on Arch Linux. This guide assumes `sudo` privileges and a clean system.
-
----
-
-## Full System Update
-
-```
-sudo pacman -Syu
-
-```
-
-## installing desktop env
-
-```
-sudo pacman -S plasma
-
-note: put everything to default
-
-```
+## KDE Plasma
 
 ```bash
-# you need a login manager:
+sudo pacman -Syu
+sudo pacman -S plasma
+```
 
-nano /kde_plasma.sh
+Create login script /kde_plasma.sh:
+
+```bash
+vim /kde_plasma.sh
 
 #!/bin/bash
 /usr/lib/plasma-dbus-run-session-if-needed /usr/bin/startplasma-wayland
+```
 
-# make it executable
+Make it executable: 
+
+```bash
 chmod +x kde_plasma.sh
 ```
 
-# Arch DWM
+## Arch DWM
 
-Follow these steps to install and run **DWM** on Arch Linux. This guide assumes `sudo` privileges and a clean system.
-
-## installing desktop env
-
-```
+```bash
 git clone https://git.suckless.org/dwm
 git clone https://git.suckless.org/st
-
-```
-
-```
 sudo pacman -Sy xorg-server xorg-xinit libx11 libxinerama libxft webkit2gtk
 ```
 
-## login manager
+Compile and install both `st` and `dwm`:
 
+```bash
+cd st && sudo make clean install
+cd ../dwm && sudo make clean install
 ```
+
+create `.xinitrc`:
+
+```bash
 vim .xinitrc
 
 exec dwm 
 ```
 
-- cd into st
-- ```
-  sudo make clean install 
-  ```
-- cd into dwm
-- ```
-  sudo make clean install 
-  ```
-- vim into .bash_profile 
-  ```
-    startx
-  ```
+Edit `.bash_profile` 
 
-
-# Arch Linux Setup Guide
-
-> you can install everything with one script using
-
+```bash
+startx
 ```
+
+# System Automation 
+
+Run the full setup using: 
+
+```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/gameshler/arch_install/main/start.sh)
 ```
 
 ## Applications and Packages
 
+Install core applications:
+
 ```bash
 sudo pacman -S firefox libreoffice-fresh vlc curl flatpak fastfetch p7zip unrar tar rsync exfat-utils fuse-exfat flac jdk-openjdk gimp steam vulkan-radeon lib32-vulkan-radeon base-devel kate mangohud lib32-mangohud corectrl openssh dolphin telegram-desktop discord visual-studio-code-bin --needed --noconfirm
 ```
 
-### yay installation:
+### AUR Helper yay installation:
 
-> `mkdir opt` if you dont have it
-
-```
+```bash
+mkdir opt
 cd /opt
 git clone https://aur.archlinux.org/yay-bin.git
 sudo chown -R "$USER": ./yay-bin
@@ -598,30 +605,20 @@ cd yay-bin
 makepkg --noconfirm -si
 ```
 
-```
-yay -S postman-bin brave-bin
-```
-
 ## Additional Tools and Configuration
 
-### configuring pacman:
+### Pacman Customization:
 
-```
-sudo nano /etc/pacman.conf
-```
-
-- remove # from:
-  - Color
-  - ParallelDownloadds
-- Add the following line for visual pacman
-
-```
-ILoveCandy
+```bash
+sudo vim /etc/pacman.conf
 ```
 
-Update the config:
+- Uncomment `Color`, `ParallelDownloads`
+- Add: `ILoveCandy` for visual style
+ 
+Update:
 
-```
+```bash
 sudo pacman -Sy
 ```
 
@@ -632,10 +629,9 @@ uncomment the following lines:
 ```
 [multilib]
 Include = /etc/pacman.d/mirrorlist
-
 ```
 
-Then update:
+Update:
 
 ```
 sudo pacman -Syyu
