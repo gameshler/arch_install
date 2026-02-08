@@ -39,11 +39,12 @@
 
    - Installing KeePassXC for Password Management
 
-8. [KDE Plasma Installation on Arch Linux](#KDE-Plasma-Installation)
+8. [KDE Plasma Installation / Arch DWM on Arch Linux](#KDE-Plasma-Installation)
 
    - Installing KDE Plasma Desktop Environment
    - Wayland Session Setup
    - Creating Custom Login Manager Script
+   - Arch DWM
 
 9. [Arch Linux Setup Guide](#Arch-Linux-Setup-Guide)
 
@@ -139,7 +140,7 @@ After all is done we need to mount our drives:
 
 > If you have more than one drive you can use `automount.sh`, make sure to gdisk before using it:
 
-> you can use `wipefs` and `gdisk` if needed and make sure they are setup as default (if the drive has data dont use neither wipefs nor gdisk)
+> you can use `wipefs`,`gdisk` and mkfs your preferred fs type if needed and make sure they are setup as default (if the drive has data dont use neither wipefs nor gdisk)
 
     mkfs.ext4 -L Storage /dev/nvme1n1p1
     mkdir -p /mnt/storage
@@ -532,6 +533,44 @@ nano /kde_plasma.sh
 # make it executable
 chmod +x kde_plasma.sh
 ```
+
+# Arch DWM
+
+Follow these steps to install and run **DWM** on Arch Linux. This guide assumes `sudo` privileges and a clean system.
+
+## installing desktop env
+
+```
+git clone https://git.suckless.org/dwm
+git clone https://git.suckless.org/st
+
+```
+
+```
+sudo pacman -Sy xorg-server xorg-xinit libx11 libxinerama libxft webkit2gtk
+```
+
+## login manager
+
+```
+vim .xinitrc
+
+exec dwm 
+```
+
+- cd into st
+- ```
+  sudo make clean install 
+  ```
+- cd into dwm
+- ```
+  sudo make clean install 
+  ```
+- vim into .bash_profile 
+  ```
+    startx
+  ```
+
 
 # Arch Linux Setup Guide
 
