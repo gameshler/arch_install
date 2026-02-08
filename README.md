@@ -42,7 +42,7 @@
 8. [Desktop Environment](#Desktop-Environment-Setup)
 
    - [KDE Plasma](#KDE-Plasma)
-   - [Arch DWM Installation](#Arch-DWM)
+   - [Arch DWM](#Arch-DWM)
 
 9. [Applications and Packages](#Applications-and-Packages)
 
