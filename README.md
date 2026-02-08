@@ -525,9 +525,9 @@ Install KeePassXC:
 pacman -S keepassxc
 ```
 
-## Desktop Environment Setup
+# Desktop Environment Setup
 
-# KDE Plasma
+## KDE Plasma
 
 ```bash
 sudo pacman -Syu
@@ -549,7 +549,7 @@ Make it executable:
 chmod +x kde_plasma.sh
 ```
 
-# Arch DWM
+## Arch DWM
 
 ```bash
 git clone https://git.suckless.org/dwm
