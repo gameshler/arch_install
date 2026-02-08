@@ -37,7 +37,7 @@
 
 7. [Password Manager](#Password-Manager)
 
-   - KeePassXC Installation and Setup
+   - KeePassXC Installation
    
 8. [Desktop Environment](#Desktop-Environment-Setup)
 
