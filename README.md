@@ -41,7 +41,7 @@
    
 8. [Desktop Environment](#Desktop-Environment-Setup)
 
-   - [KDE Plasma (Wayland)](#KDE-Plasma-(Wayland))
+   - [KDE Plasma](#KDE-Plasma)
    - [Arch DWM Installation](#Arch-DWM)
 
 9. [Applications and Packages](#Applications-and-Packages)
@@ -527,7 +527,7 @@ pacman -S keepassxc
 
 ## Desktop Environment Setup
 
-# KDE Plasma (Wayland)
+# KDE Plasma
 
 ```bash
 sudo pacman -Syu
