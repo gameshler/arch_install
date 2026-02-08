@@ -515,7 +515,7 @@ Load your new rules with:
 sysctl --system
 ```
 
-## Password Manager (Optional)
+## Password Manager
 
 Install KeePassXC:
 
