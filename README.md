@@ -39,9 +39,9 @@
 
    - KeePassXC Installation and Setup
    
-8. [KDE Plasma Installation](#KDE-Plasma-Installation)
+8. [KDE Plasma](#KDE-Plasma)
 
-   - [KDE Plasma on Wayland](#KDE-Plasma-Installation)
+   - [KDE Plasma (Wayland)](#KDE-Plasma-(Wayland))
    - [Arch DWM Installation](#Arch-DWM)
 
 9. [Applications and Packages](#Applications-and-Packages)
