@@ -39,7 +39,7 @@
 
    - KeePassXC Installation and Setup
    
-8. [KDE Plasma](#KDE-Plasma)
+8. [Desktop Environment](#Desktop-Environment-Setup)
 
    - [KDE Plasma (Wayland)](#KDE-Plasma-(Wayland))
    - [Arch DWM Installation](#Arch-DWM)
