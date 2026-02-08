@@ -1,7 +1,5 @@
 # Arch Install
 
-## Table of Contents
-
 1. [Introduction](#Introduction)
 
    - Pre-requisites & Checklist
