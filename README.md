@@ -581,7 +581,7 @@ startx
 Run the full setup using: 
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/gameshler/arch_install/main/start.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/gameshler/arch-gameshler/main/start.sh)
 ```
 
 ## Applications and Packages
