@@ -53,7 +53,6 @@ install_nerd_font() {
     # Change this URL to correspond with the correct font
     FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip"
     FONT_DIR="$HOME/.local/share/fonts"
-    TEMP_DIR=$(mktemp -d)
     curl -sSLo "$TEMP_DIR"/"${FONT_NAME}".zip "$FONT_URL"
     unzip "$TEMP_DIR"/"${FONT_NAME}".zip -d "$TEMP_DIR"
     mkdir -p "$FONT_DIR"/"$FONT_NAME"
