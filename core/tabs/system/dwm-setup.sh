@@ -2,6 +2,20 @@
 
 . "$COMMON_SCRIPT"
 
+isServiceActive() {
+    case "$INIT_MANAGER" in
+        systemctl)
+            sudo "$INIT_MANAGER" is-active --quiet "$1"
+            ;;
+        rc-service)
+            sudo "$INIT_MANAGER" "$1" status --quiet
+            ;;
+        sv)
+            sudo "$INIT_MANAGER" status "$1" >/dev/null 2>&1
+            ;;
+    esac
+}
+
 setupDWM() {
     printf "%b\n" "Installing DWM..."
     case "$PACKAGER" in
