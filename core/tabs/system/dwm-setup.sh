@@ -58,7 +58,6 @@ install_nerd_font() {
     mkdir -p "$FONT_DIR"/"$FONT_NAME"
     mv "${TEMP_DIR}"/*.ttf "$FONT_DIR"/"$FONT_NAME"
     fc-cache -fv
-    rm -rf "${TEMP_DIR}"
     printf "%b\n" "'$FONT_NAME' installed successfully."
 }
 
