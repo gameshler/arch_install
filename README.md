@@ -7,7 +7,7 @@
 
 2. [Disk Partitioning](#Disk-Partitioning)
 
-   - Wiping and Partitioning the Drive
+   - Wiping and Partitioning the Drives
    - Creating Encrypted Volume and LVM Setup
    - Mounting the Partitions
 
