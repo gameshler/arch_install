@@ -101,7 +101,7 @@ linkConfig() {
     printf "%b\n" "Done! restart your shell to see the changes."
 }
 
-checkEnv
+
 installDepend
 setupBash
 installFont
