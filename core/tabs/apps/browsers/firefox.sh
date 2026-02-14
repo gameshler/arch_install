@@ -19,6 +19,6 @@ installFirefox() {
     fi
 }
 
-checkEnv
+
 installFirefox
 
