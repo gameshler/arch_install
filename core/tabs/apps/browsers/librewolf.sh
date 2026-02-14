@@ -19,6 +19,6 @@ installLibreWolf() {
     fi
 }
 
-checkEnv
+checkAurHelper
 installLibreWolf
 
