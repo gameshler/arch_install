@@ -30,6 +30,6 @@ setupGhosttyConfig() {
     printf "%b\n" "Ghostty configuration files copied."
 }
 
-checkEnv
+
 installGhostty
 setupGhosttyConfig
