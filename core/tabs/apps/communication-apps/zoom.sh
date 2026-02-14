@@ -18,6 +18,6 @@ installZoom() {
         printf "%b\n" "Zoom is already installed."
     fi
 }
-checkEnv
+checkAurHelper
 installZoom
 
