@@ -18,6 +18,6 @@ installTelegram() {
         printf "%b\n" "Telegram is already installed."
     fi
 }
-checkEnv
+
 installTelegram
 
