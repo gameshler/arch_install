@@ -85,6 +85,6 @@ main() {
     update_fstab
     mount_drive
 }
-checkEnv
+
 main
 
