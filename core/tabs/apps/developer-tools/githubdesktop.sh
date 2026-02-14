@@ -18,6 +18,6 @@ installGithubDesktop() {
         printf "%b\n" "Github Desktop is already installed."
     fi
 }
-checkEnv
+checkAurHelper
 installGithubDesktop
 
