@@ -38,6 +38,6 @@ setupRofiConfig() {
 
 }
 
-checkEnv
+
 installRofi
 setupRofiConfig
