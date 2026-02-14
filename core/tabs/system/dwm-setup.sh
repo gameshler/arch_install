@@ -44,7 +44,7 @@ makeDWM() {
 
 install_nerd_font() {
     # Check to see if the FiraCode Nerd Font is installed (Change this to whatever font you would like)
-    FONT_NAME="FiraCode Nerd Font Mono"
+    FONT_NAME="FiraCode Nerd Font"
     FONT_DIR="$HOME/.local/share/fonts"
     FONT_URL="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip"
     FONT_INSTALLED=$(fc-list | grep -i "FiraCode")
