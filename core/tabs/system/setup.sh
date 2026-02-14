@@ -166,10 +166,10 @@ EOF
     . "$HOME/.bashrc" || true
 
     # Dotfiles array
-    dotfiles=(.gitignore .gitconfig .bashrc)
+    dotfiles=(.gitignore .gitconfig)
 
     for dotfile in "${dotfiles[@]}"; do
-        src="$DOT_FILES/$dotfile"
+        src="$FILES/$dotfile"
         dest="$HOME/$dotfile"
         if [ -f "$src" ]; then
             cp "$src" "$dest"
