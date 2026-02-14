@@ -18,6 +18,6 @@ installSlack() {
         printf "%b\n" "Slack is already installed."
     fi
 }
-checkEnv
+checkAurHelper
 installSlack
 
