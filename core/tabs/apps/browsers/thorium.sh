@@ -18,6 +18,6 @@ installThrorium() {
         printf "%b\n" "Thorium Browser is already installed."
     fi
 }
-checkEnv
+checkAurHelper
 installThrorium
 
