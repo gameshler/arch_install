@@ -18,6 +18,6 @@ installVsCode() {
         printf "%b\n" "VS Code is already installed."
     fi
 }
-checkEnv
+checkAurHelper
 installVsCode
 
