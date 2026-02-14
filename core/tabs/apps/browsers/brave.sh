@@ -11,5 +11,5 @@ installBrave() {
     fi
 }
 
-checkEnv
+
 installBrave
