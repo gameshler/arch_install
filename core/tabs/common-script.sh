@@ -106,8 +106,7 @@ check_init_manager() {
     exit 1
 }
 
-checkEnv() {
+
     checkPackageManager "pacman"
-    checkAurHelper
     check_init_manager 'systemctl rc-service sv'
-}
+
