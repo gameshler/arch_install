@@ -172,7 +172,7 @@ setupDisplayManager() {
     fi
 }
 
-checkEnv
+
 setupDisplayManager
 setupDWM
 makeDWM
