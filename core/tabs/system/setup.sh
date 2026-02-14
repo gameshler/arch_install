@@ -183,5 +183,5 @@ EOF
     exec bash -l
 }
 
-checkEnv
+
 main
