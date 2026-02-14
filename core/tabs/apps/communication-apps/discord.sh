@@ -18,6 +18,6 @@ installDiscord() {
         printf "%b\n" "Discord is already installed."
     fi
 }
-checkEnv
+
 installDiscord
 
