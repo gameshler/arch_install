@@ -37,7 +37,7 @@ linkNeovimConfig() {
     cp -r "$TEMP_DIR/neovim/lazy-lock.json" "$HOME/.config/nvim/"
 
 }
-checkEnv
+
 installNeovim
 cloneNeovim
 linkNeovimConfig
