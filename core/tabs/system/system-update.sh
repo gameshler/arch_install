@@ -51,7 +51,7 @@ updateFlatpaks() {
         flatpak update -y
     fi
 }
-checkEnv
+checkAurHelper
 fastUpdate
 updateSystem
 updateFlatpaks
