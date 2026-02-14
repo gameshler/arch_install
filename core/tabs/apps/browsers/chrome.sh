@@ -19,6 +19,6 @@ installChrome() {
     fi
 }
 
-checkEnv
+checkAurHelper
 installChrome
 
