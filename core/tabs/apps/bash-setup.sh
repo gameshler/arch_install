@@ -24,7 +24,7 @@ setupBash() {
     if [ -d "$gitpath" ]; then
         rm -rf "$gitpath"
     fi
-    mkdir -p "$HOME/.local/share"
+    mkdir -p "$HOME/.local/share/bash"
     files=(starship.toml .bashrc)
 
     for file in "${files[@]}"; do
