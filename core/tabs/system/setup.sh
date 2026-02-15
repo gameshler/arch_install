@@ -60,19 +60,27 @@ main() {
     sudo "$PACKAGER" -Syyu --noconfirm
     printf "%b\n" "Installing packages"
     gpu_type=$(lspci | grep -E "VGA|3D|Display")
-    if echo "${gpu_type}" | grep -E "NVIDIA|GeForce"; then
+    case "$gpu_type" in
+    *NVIDIA* | *GeForce*)
         echo "Installing NVIDIA drivers: nvidia-lts"
         sudo "$PACKAGER" -S --noconfirm --needed nvidia-lts
-    elif echo "${gpu_type}" | grep 'VGA' | grep -E "Radeon|AMD"; then
+        ;;
+    *Radeon* | *AMD*)
         echo "Installing AMD drivers: xf86-video-amdgpu"
         sudo "$PACKAGER" -S --noconfirm --needed vulkan-radeon lib32-vulkan-radeon
-    elif echo "${gpu_type}" | grep -E "Integrated Graphics Controller"; then
+        ;;
+    *Integrated\ Graphics\ Controller*)
         echo "Installing Intel drivers:"
         sudo "$PACKAGER" -S --noconfirm --needed libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa
-    elif echo "${gpu_type}" | grep -E "Intel Corporation UHD"; then
+        ;;
+    *Intel\ Corporation\ UHD*)
         echo "Installing Intel UHD drivers:"
         sudo "$PACKAGER" -S --noconfirm --needed libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa
-    fi
+        ;;
+    *)
+        echo "Unknown GPU type: $gpu_type"
+        ;;
+    esac
 
     install_packages "$PACKAGER" \
         libreoffice-fresh vlc curl flatpak fastfetch p7zip unrar tar rsync \
@@ -182,6 +190,5 @@ EOF
 
     exec bash -l
 }
-
 
 main
