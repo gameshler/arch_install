@@ -1,197 +1,218 @@
-#!/usr/bin/env bash
- 
-set -euo pipefail
+#!/bin/bash
 
-# =============================================================================
-# CONFIG - EDIT THESE FOR YOUR SYSTEM
-# =============================================================================
-DISK="drive name"                    # lsblk to confirm!
-HOSTNAME="arch-secure"
-USERNAME="username" 
-ROOT_PASSWORD="changeme_root"
-USER_PASSWORD="changeme_user"
-UCODE="amd-ucode or intel-ucode"          
-TIMEZONE="Region/Area"
-LOCALE="your locale"
-KEYMAP="your keymap"
 
+exec > >(tee -a arch-install.log) 2>&1
+
+# === INITIAL CHECKS ===
 clear
-echo "=== ARCH INSTALLER ==="
-echo "Disk: $DISK | User: $USERNAME | Host: $HOSTNAME"
-read -p "CONFIRM WIPE $DISK? (y/N): " confirm && [[ $confirm =~ ^[Yy]$ ]] || { echo "Aborted"; exit 1; }
 
-# =============================================================================
-# 1. PREP 
-# =============================================================================
-echo "→ Preparing system..."
-pacman-key --init
-pacman-key --populate 
-timedatectl set-ntp true
+# Safety checks
+if [ ! -f /usr/bin/pacstrap ]; then
+    echo "❌ Must run from Arch Linux ISO environment"
+    exit 1
+fi
+if [[ $EUID -ne 0 ]]; then
+    echo "❌ Must run as root"
+    exit 1
+fi
 
-# =============================================================================
-# 2. DISK PARTITIONING 
-# =============================================================================
-echo "→ Partitioning $DISK (EFI + LUKS2 + LVM)..."
-wipefs -fa "$DISK"
-sgdisk --zap-all "$DISK"
-sgdisk -n1:0:+1G -t1:EF00 "$DISK"      # EFI 1GB
-sgdisk -n2:0:0   -t2:8309 "$DISK"      # LUKS remaining
-partprobe "$DISK"
+# Reusable selector (arrow keys)
+select_option() {
+    local options=("$@") num_options=${#options[@]} selected=0 last_selected=-1
+    while true; do
+        [ $last_selected -ne -1 ] && echo -ne "\033[${num_options}A"
+        echo "Please select (↑↓ arrows, Enter):"
+        for i in "${!options[@]}"; do
+            [ "$i" -eq "$selected" ] && echo "> ${options[$i]}" || echo "  ${options[$i]}"
+        done
+        last_selected=$selected
+        read -rsn1 key
+        case $key in
+            $'\x1b') read -rsn2 -t 0.1 key
+                case $key in '[A') ((selected--)) [ $selected -lt 0 ] && selected=$((num_options-1));;
+                               '[B') ((selected++)) [ $selected -ge $num_options ] && selected=0;; esac;;
+            '') break;; esac
+    done
+    return $selected
+}
 
-EFI_PART="${DISK}p1"
-LUKS_PART="${DISK}p2"
+# === USER INPUT ===
+echo -e "\n🔧 Gathering system information...\n"
 
-mkfs.fat -F32 "$EFI_PART"
-echo "cryptlvm" | cryptsetup luksFormat --type luks2 --key-file - "$LUKS_PART"
-echo "cryptlvm" | cryptsetup open --allow-discards --key-file - "$LUKS_PART" cryptlvm
+# Disk selection (WARNING!)
+echo -e "\n💾 ⚠️  SELECT DISK - THIS WILL WIPE ALL DATA ⚠️"
+PS3="Select disk to install on: "
+mapfile -t disks < <(lsblk -n -o NAME,SIZE,TYPE | awk '$3=="disk" {print "/dev/"$1" ("$2")"}')
+select_option "${disks[@]}"
+DISK="${disks[$?]/ (*}"
+echo "✅ Selected: $DISK"
 
-pvcreate /dev/mapper/cryptlvm
-vgcreate vg /dev/mapper/cryptlvm  
-lvcreate -l 100%FREE -n root vg
-mkfs.ext4 -L root /dev/vg/root
+# Timezone
+timezone() {
+    local tz=$(curl -s --fail https://ipapi.co/timezone 2>/dev/null || echo "")
+    echo "🌍 Detected timezone: ${tz:-none}"
+    local options=("Yes" "No" "Manual")
+    select_option "${options[@]}"
+    case $? in 0) export TIMEZONE=$tz;; 1) read -p "Enter timezone (Region/City): " TIMEZONE;; *) read -p "Enter timezone: " TIMEZONE;; esac
+}
+timezone
 
-mount /dev/vg/root /mnt
-mkdir -p /mnt/boot/efi
-mount "$EFI_PART" /mnt/boot/efi
+# Username/hostname
+read -p "👤 Username: " USERNAME
+read -rs -p "🔑 Password: " PASSWORD; echo
+read -r -p "🏷️  Hostname: " HOSTNAME
 
-# =============================================================================
-# 3. BASE SYSTEM
-# =============================================================================
-echo "→ Installing base system..."
-pacstrap /mnt base linux linux-firmware "$UCODE" sudo vim nano konsole lvm2 dracut \
-  sbsigntools iwd git ntfs-3g efibootmgr binutils networkmanager pacman man-db \
-  base-devel nftables sbctl
+# UCODE (detect CPU)
+UCODE="amd-ucode"
+grep -q "GenuineIntel" /proc/cpuinfo && UCODE="intel-ucode"
+echo "🖥️  Using $UCODE"
 
-genfstab -U /mnt >> /mnt/etc/fstab
-LUKS_UUID=$(blkid -s UUID -o value "$LUKS_PART")
+# === DISK PARTITIONING (Your exact layout) ===
+echo -e "\n💿 Partitioning $DISK (EFI + LUKS2 + LVM)..."
+wipefs -af "$DISK"
+gdisk "$DISK" <<EOF
+o
+n
+1
 
-# =============================================================================
-# 4. CHROOT CONFIG
-# =============================================================================
-cat > /mnt/root/config << EOF
-HOSTNAME=$HOSTNAME
-USERNAME=$USERNAME
-ROOT_PASSWORD=$ROOT_PASSWORD
-USER_PASSWORD=$USER_PASSWORD
-LOCALE=$LOCALE
-KEYMAP=$KEYMAP
-TIMEZONE=$TIMEZONE
-LUKS_UUID=$LUKS_UUID
-DISK=$DISK
++1G
+EF00
+n
+2
+
+
+8309
+w
+y
 EOF
 
-cat > /mnt/root/chroot.sh << 'EOF'
-#!/bin/bash
-set -euo pipefail
-source /root/config
+# Determine partition names
+[[ $DISK =~ nvme ]] && EFI_PART="${DISK}p1" && LUKS_PART="${DISK}p2" || EFI_PART="${DISK}1" && LUKS_PART="${DISK}2"
 
-# YOUR BASIC CONFIG
-echo "root:$ROOT_PASSWORD" | chpasswd
-echo "$USERNAME:$USER_PASSWORD" | chpasswd
+# Format EFI
+mkfs.fat -F32 "$EFI_PART"
+
+# LUKS2 + LVM (YOUR EXACT GUIDE)
+cryptsetup luksFormat --type luks2 "$LUKS_PART"
+cryptsetup open --allow-discards "$LUKS_PART" cryptlvm
+pvcreate /dev/mapper/cryptlvm
+vgcreate vg /dev/mapper/cryptlvm
+lvcreate -L 5G vg -n swap
+lvcreate -L 25G vg -n root  
+lvcreate -l 100%FREE vg -n home
+
+mkfs.ext4 /dev/vg/root
+mkfs.ext4 /dev/vg/home  
+mkswap /dev/vg/swap; swapon /dev/vg/swap
+
+# Mount everything
+mount /dev/vg/root /mnt
+mkdir -p /mnt/{home,boot/efi}
+mount /dev/vg/home /mnt/home
+mount "$EFI_PART" /mnt/boot/efi
+
+# Mirrors & pacstrap (mkinitcpio UKI path)
+timedatectl set-ntp true
+pacman -Syy
+reflector --country GB --latest 10 --sort rate --save /etc/pacman.d/mirrorlist
+pacman -S --noconfirm gptfdisk lvm2
+
+# YOUR pacstrap (mkinitcpio UKI)
+pacstrap /mnt base linux linux-firmware linux-lts $UCODE sudo vim lvm2 sbsigntools systemd systemd-ukify git ntfs-3g efibootmgr binutils networkmanager pacman konsole
+genfstab -U /mnt >> /mnt/etc/fstab
+
+# === CHROOT PHASE ===
+echo "🔄 Entering chroot for system configuration..."
+cat > /mnt/root-install.sh << 'EOF'
+#!/bin/bash
+set -e
+
+# Timezone & locale (YOUR guide)
 ln -sf "/usr/share/zoneinfo/$TIMEZONE" /etc/localtime
 hwclock --systohc
-sed -i "s/^#${LOCALE}/${LOCALE}/" /etc/locale.gen
+echo "en_GB.UTF-8 UTF-8" > /etc/locale.gen
 locale-gen
-echo "LANG=$LOCALE" > /etc/locale.conf
-echo "KEYMAP=$KEYMAP
+echo "LANG=en_GB.UTF-8" > /etc/locale.conf
+
+# vconsole & hostname
+cat > /etc/vconsole.conf << EOF2
+KEYMAP=us
 FONT=Lat2-Terminus16
-FONT_MAP=8859-1" > /etc/vconsole.conf
+FONT_MAP=8859-1
+EOF2
 echo "$HOSTNAME" > /etc/hostname
-cat >> /etc/hosts << EOH
+
+cat > /etc/hosts << EOF2
 127.0.0.1   localhost
 ::1         localhost
-127.0.1.1   ${HOSTNAME}.localdomain $HOSTNAME
-EOH
-useradd -m -G wheel "$USERNAME"
-sed -i 's/^# %wheel ALL=(ALL) ALL/%wheel ALL=(ALL) ALL/' /etc/sudoers
+127.0.1.1   $HOSTNAME.localdomain $HOSTNAME
+EOF2
+
+# Users (YOUR guide)
+passwd << EOF3
+$PASSWORD
+$PASSWORD
+EOF3
+useradd -m -G wheel -s /bin/bash $USERNAME
+passwd $USERNAME << EOF3
+$PASSWORD
+$PASSWORD
+EOF3
+echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
+
+# Essential services
 systemctl enable NetworkManager fstrim.timer
 
-# YOUR DRACUT UKI HOOKS (EXACT COPY)
-mkdir -p /boot/efi/EFI/Linux /etc/pacman.d/hooks /usr/local/bin /etc/dracut.conf.d
-cat > /usr/local/bin/dracut-install.sh << 'D1'
-#!/usr/bin/env bash
-mkdir -p /boot/efi/EFI/Linux
-while read -r line; do
-  if [[ "$line" == 'usr/lib/modules/'+([^/])'/pkgbase' ]]; then
-    kver="${line#'usr/lib/modules/'}"
-    kver="${kver%'/pkgbase'}"
-    dracut --force --uefi --kver "$kver" /boot/efi/EFI/Linux/bootx64.efi
-  fi
-done
-D1
-cat > /usr/local/bin/dracut-remove.sh << 'D2'
-#!/usr/bin/env bash
-rm -f /boot/efi/EFI/Linux/bootx64.efi
-D2
-chmod +x /usr/local/bin/dracut-*
+# === MKINITCPIO UKI (YOUR exact guide) ===
+cat > /etc/mkinitcpio.conf << 'EOF_MKI'
+HOOKS=(systemd autodetect microcode modconf kms keyboard sd-vconsole block sd-encrypt lvm2 filesystems fsck)
+EOF_MKI
 
-cat > /etc/pacman.d/hooks/90-dracut-install.hook << 'H1'
-[Trigger]
-Type = Path
-Operation = Install
-Operation = Upgrade
-Target = usr/lib/modules/*/pkgbase
-[Action]
-Description = Updating linux EFI image
-When = PostTransaction
-Exec = /usr/local/bin/dracut-install.sh
-Depends = dracut
-NeedsTargets
-H1
-cat > /etc/pacman.d/hooks/60-dracut-remove.hook << 'H2'
-[Trigger]
-Type = Path
-Operation = Remove
-Target = usr/lib/modules/*/pkgbase
-[Action]
-Description = Removing linux EFI image
-When = PreTransaction
-Exec = /usr/local/bin/dracut-remove.sh
-NeedsTargets
-H2
+# Kernel cmdline
+LUKS_UUID=$(blkid -s UUID -o value /dev/nvme0n1p2)
+echo "rd.luks.name=$LUKS_UUID=cryptlvm root=/dev/vg/root rootfstype=ext4 rw quiet bgrt_disable" > /etc/kernel/cmdline
 
-echo "kernel_cmdline=\"rd.luks.uuid=$LUKS_UUID rd.lvm.lv=vg/root root=/dev/mapper/vg-root rootfstype=ext4 rootflags=rw,relatime\"" > /etc/dracut.conf.d/cmdline.conf
-echo 'compress="zstd"
-hostonly="no"' > /etc/dracut.conf.d/flags.conf
+# systemd-boot
+bootctl --path=/boot/efi install
+cat > /boot/efi/loader/loader.conf << EOF_LOADER
+default arch-linux.efi
+timeout 4
+console-mode auto
+editor no
+EOF_LOADER
 
-# Generate UKI
-pacman -S --noconfirm linux
-efibootmgr --create --disk $DISK --part 1 --label "Arch Linux" --loader '\EFI\Linux\bootx64.efi' --unicode
+# Linux presets (YOUR exact config)
+cat > /etc/mkinitcpio.d/linux.preset << EOF_PRESET
+ALL_config="/etc/mkinitcpio.conf"
+ALL_kver="/boot/vmlinuz-linux"
+PRESETS=('default')
+default_uki="/boot/efi/EFI/Linux/arch-linux.efi"
+default_options="--splash /usr/share/systemd/bootctl/splash-arch.bmp"
+fallback_uki="/boot/efi/EFI/Linux/arch-linux-fallback.efi"
+fallback_options="-S autodetect"
+EOF_PRESET
 
-# YOUR SECUREBOOT (EXACT)
-pacman -S --noconfirm sbctl
-sbctl create-keys
-sbctl sign -s /boot/efi/EFI/Linux/bootx64.efi
-cat > /etc/dracut.conf.d/secureboot.conf << 'SB'
-uefi_secureboot_cert="/var/lib/sbctl/keys/db/db.pem"
-uefi_secureboot_key="/var/lib/sbctl/keys/db/db.key"
-SB
-cat > /etc/pacman.d/hooks/zz-sbctl.hook << 'SBH'
-[Trigger]
-Type = Path
-Operation = Install
-Operation = Upgrade
-Operation = Remove
-Target = boot/*
-Target = efi/*
-Target = usr/lib/modules/*/vmlinuz
-Target = usr/lib/initcpio/*
-Target = usr/lib/**/efi/*.efi*
-[Action]
-Description = Signing EFI binaries...
-When = PostTransaction
-Exec = /usr/bin/sbctl sign /boot/efi/EFI/Linux/bootx64.efi
-SBH
-sbctl enroll-keys --microsoft
+cat > /etc/mkinitcpio.d/linux-lts.preset << EOF_PRESET
+ALL_config="/etc/mkinitcpio.conf"
+ALL_kver="/boot/vmlinuz-linux-lts"
+PRESETS=('default')
+default_uki="/boot/efi/EFI/Linux/arch-linux-lts.efi"
+default_options="--splash /usr/share/systemd/bootctl/splash-arch.bmp"
+fallback_uki="/boot/efi/EFI/Linux/arch-linux-lts-fallback.efi"
+fallback_options="-S autodetect"
+EOF_PRESET
 
-# YOUR NFTABLES (EXACT COPY)
-cat > /etc/nftables.conf << 'NFT'
+mkinitcpio -P
+systemctl enable systemd-boot-update.service
+
+# === FIREWALL (nftables - YOUR exact rules) ===
+pacman -S --noconfirm nftables
+cat > /etc/nftables.conf << 'EOF_NFT'
 #!/usr/bin/nft -f
 destroy table inet filter
 table inet filter {
   chain input {
-    type filter hook input priority filter
-    policy drop
+    type filter hook input priority filter; policy drop;
     ct state invalid drop comment "early drop of invalid connections"
     ct state {established, related} accept comment "allow tracked connections"
     iif lo accept comment "allow from loopback"
@@ -208,14 +229,14 @@ table inet filter {
     tcp dport 22 counter accept comment "SSH passed brute-force check"
   }
   chain forward {
-    type filter hook forward priority filter
-    policy drop
+    type filter hook forward priority filter; policy drop;
   }
 }
-NFT
+EOF_NFT
 systemctl enable --now nftables
 
-cat > /etc/sysctl.d/90-network.conf << 'SYS'
+# === KERNEL PARAMETERS (sysctl) ===
+cat > /etc/sysctl.d/90-network.conf << EOF_SYSCTL
 net.ipv4.ip_forward = 0
 net.ipv6.conf.all.forwarding = 0
 net.ipv4.tcp_syncookies = 1
@@ -227,46 +248,20 @@ net.ipv6.conf.all.accept_redirects = 0
 net.ipv6.conf.default.accept_redirects = 0
 net.ipv4.conf.all.send_redirects = 0
 net.ipv4.conf.default.send_redirects = 0
-SYS
+EOF_SYSCTL
 sysctl --system
 
-pacman -S sudo pacman -S firefox libreoffice-fresh vlc curl flatpak fastfetch p7zip unrar tar rsync exfat-utils fuse-exfat flac jdk-openjdk gimp steam vulkan-radeon lib32-vulkan-radeon base-devel kate mangohud lib32-mangohud corectrl openssh dolphin telegram-desktop discord visual-studio-code-bin sddm --needed --noconfirm
 
-systemctl enable sddm
-
-# YOUR YAY AUR
-su - "$USERNAME" -c "
-  mkdir -p /opt
-  cd /opt
-  git clone https://aur.archlinux.org/yay-bin.git
-  cd yay-bin
-  makepkg -si --noconfirm
-  yay -S --noconfirm postman-bin brave-bin
-"
-
-# YOUR PACMAN CONFIG
-sed -i 's/^#Color/Color\nILoveCandy/' /etc/pacman.conf
-sed -i 's/^#ParallelDownloads/ParallelDownloads 5/' /etc/pacman.conf
-sed -i '/\[multilib\]/,/Include/ s/^#//' /etc/pacman.conf
-
-# YOUR CORECTRL + MANGOHUD
-mkdir -p "/home/$USERNAME/.config/autostart"
-cp /usr/share/applications/org.corectrl.CoreCtrl.desktop "/home/$USERNAME/.config/autostart/"
-mkdir -p "/home/$USERNAME/.config/MangoHud"
-cp /usr/share/doc/mangohud/MangoHud.conf.example "/home/$USERNAME/.config/MangoHud/MangoHud.conf"
-chown -R "$USERNAME:$USERNAME" "/home/$USERNAME"
-
-pacman -Syyu --noconfirm
+# === FINAL CLEANUP ===
+echo "✅ Installation complete!"
+echo "🔄 Reboot: reboot"
 EOF
 
-chmod +x /mnt/root/chroot.sh
-echo "→ Running chroot configuration (30-45 mins)..."
-arch-chroot /mnt /root/chroot.sh
-rm /mnt/root/chroot.sh /mnt/root/config
+chmod +x /mnt/root-install.sh
+arch-chroot /mnt /root-install.sh
+rm /mnt/root-install.sh
 
-# =============================================================================
-# 5. CLEANUP & FINISH
-# =============================================================================
-echo "→ Unmounting..."
-umount -R /mnt
-echo "=== INSTALLATION COMPLETE! ==="
+echo -e "\n🎉 ARCH INSTALLATION COMPLETE!"
+echo "📋 Log saved to: arch-install.log"
+echo "🔄 Reboot when ready: reboot"
+
