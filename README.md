@@ -136,6 +136,15 @@ mkdir -p /mnt/boot/efi
 mount /dev/nvme0n1p1 /mnt/boot/efi
 ```
 
+**Troubleshooting**
+
+```bash
+cryptsetup open /dev/nvme0n1p2 cryptlvm
+vgchange -ay
+mount /dev/vg/root /mnt
+mount /dev/nvme0n1p1 /mnt/boot/efi
+```
+
 > [!NOTE]  
 > If you have additional storage drives, repeat the process as needed.
 > you can use `auto-mount.sh` later, make sure to use `wipefs`, `gdisk` and `mkfs`
