@@ -122,14 +122,18 @@ Create and configure LVM inside the encrypted container:
 pvcreate /dev/mapper/cryptlvm
 vgcreate vg /dev/mapper/cryptlvm
 lvcreate -L 32G vg -n swap
-lvcreate -l 100%FREE vg -n root
+lvcreate -L 40G vg -n root
+lvcreate -l 100%FREE vg -n home
 mkfs.ext4 /dev/vg/root
+mkfs.ext4 /dev/vg/home
 ```
 
 **Mounting Partitions**
 
 ```bash
 mount /dev/vg/root /mnt
+mkdir -p /mnt/home 
+mount /dev/vg/home /mnt/home
 mkswap /dev/vg/swap
 swapon /dev/vg/swap
 mkdir -p /mnt/boot/efi
