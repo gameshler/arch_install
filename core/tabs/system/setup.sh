@@ -184,8 +184,8 @@ EOF
             echo "Warning: $src not found, skipping."
         fi
     done
-
-    sudo cat > /etc/nftables.conf << 'EOF'
+sudo bash -c '
+    cat > /etc/nftables.conf << 'EOF'
 #!/usr/bin/nft -f
 
 destroy table inet filter
@@ -220,7 +220,7 @@ EOF
 
 systemctl enable --now nftables
 
-sudo cat > /etc/sysctl.d/90-network.conf << 'EOF'
+    cat > /etc/sysctl.d/90-network.conf << 'EOF'
 # Do not act as a router
 net.ipv4.ip_forward = 0
 net.ipv6.conf.all.forwarding = 0
@@ -241,7 +241,7 @@ net.ipv4.conf.all.send_redirects = 0
 net.ipv4.conf.default.send_redirects = 0
 EOF
     sysctl --system
-    
+'
     printf "%b\n" "Setup completed successfully!"
 
     exec bash -l
