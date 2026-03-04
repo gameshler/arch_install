@@ -42,7 +42,7 @@ setupLibvirt() {
     printf "%b\n" "Configuring Libvirt."
 
     sudo "$PACKAGER" -S --needed --noconfirm dnsmasq
-    sudo sed -i 's/^#\?firewall_backend\s*=\s*".*"/firewall_backend = "nftables"/' "/etc/libvirt/network.conf"
+    sudo sed -i 's/^#\?firewall_backend\s*=\s*".*"/firewall_backend = "nftables"/' "/etc/libvirt/90-network.conf"
 
     if systemctl is-active --quiet polkit; then
         sudo sed -i 's/^#\?auth_unix_ro\s*=\s*".*"/auth_unix_ro = "polkit"/' "/etc/libvirt/libvirtd.conf"
@@ -56,6 +56,11 @@ setupLibvirt() {
             sudo sed -i "/^hosts:/ s/$/ ${value}/" /etc/nsswitch.conf
         fi
     done
+
+    sudo sed -i -E \
+    -e 's/^(\s*)#\s*(unix_sock_group = "libvirt")/\1\2/' \
+    -e 's/^(\s*)#\s*(unix_sock_rw_perms = "0770")/\1\2/' \
+    /etc/libvirt/libvirtd.conf
 
     sudo systemctl enable --now libvirtd.service
     sudo virsh net-autostart default
