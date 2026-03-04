@@ -85,7 +85,7 @@ main() {
         libreoffice-fresh vlc curl flatpak fastfetch p7zip unrar tar rsync \
         exfat-utils fuse-exfat flac jdk-openjdk gimp \
         base-devel mangohud lib32-mangohud corectrl openssh \
-        htop steam reflector git
+        htop steam reflector git nftables
 
     choose_installation
     sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
@@ -185,6 +185,63 @@ EOF
         fi
     done
 
+    sudo cat > /etc/nftables.conf << 'EOF'
+#!/usr/bin/nft -f
+
+destroy table inet filter
+table inet filter {
+  chain input {
+    type filter hook input priority filter
+    policy drop
+
+    ct state invalid drop comment "early drop of invalid connections"
+    ct state {established, related} accept comment "allow tracked connections"
+    iif lo accept comment "allow from loopback"
+    ip protocol icmp accept comment "allow icmp"
+    meta l4proto ipv6-icmp accept comment "allow icmp v6"
+    meter ssh_conn_limit { ip saddr timeout 30s limit rate 6/minute } counter jump ssh_check
+    tcp dport 22 accept comment "allow SSH"
+    tcp dport 80 accept comment "allow HTTP"
+    tcp dport 443 accept comment "allow HTTPS"
+    pkttype host limit rate 5/second counter reject with icmpx type admin-prohibited
+    counter
+  }
+
+  chain ssh_check {
+    tcp dport 22 counter accept comment "SSH passed brute-force check"
+  }
+
+  chain forward {
+    type filter hook forward priority filter
+    policy drop
+  }
+}
+EOF
+
+systemctl enable --now nftables
+
+sudo cat > /etc/sysctl.d/90-network.conf << 'EOF'
+# Do not act as a router
+net.ipv4.ip_forward = 0
+net.ipv6.conf.all.forwarding = 0
+
+# SYN flood protection
+net.ipv4.tcp_syncookies = 1
+
+# Disable ICMP redirect
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv4.conf.all.secure_redirects = 0
+net.ipv4.conf.default.secure_redirects = 0
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+
+# Do not send ICMP redirects
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+EOF
+    sysctl --system
+    
     printf "%b\n" "Setup completed successfully!"
 
     exec bash -l
