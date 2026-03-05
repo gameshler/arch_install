@@ -614,6 +614,8 @@ table inet filter {
     tcp dport 22 accept comment "allow SSH"
     tcp dport 80 accept comment "allow HTTP"
     tcp dport 443 accept comment "allow HTTPS"
+    iif virbr0 ct state {established, related} accept comment "allow libvirt incoming"
+    iif virbr0 accept comment "allow libvirt bridge"
     pkttype host limit rate 5/second counter reject with icmpx type admin-prohibited
     counter
   }
@@ -625,6 +627,8 @@ table inet filter {
   chain forward {
     type filter hook forward priority filter
     policy drop
+    iif virbr0 oif enp5s0 accept comment "allow VMs to access external network"
+    iif enp5s0 oif virbr0 ct state {established, related} accept comment "allow external replies"
   }
 }
 ```
