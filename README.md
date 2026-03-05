@@ -589,13 +589,6 @@ pacman -S nftables
 
 Edit the `/etc/nftables.conf`. Proposed firewall rules:
 
-- drop all forwarding traffic (we're not a router),
-- allow loopback (127.0.0.0)
-- allow ICMP for v4 and v6 (you can turn it off, but for v6 it will disable [SLAAC](<https://wiki.archlinux.org/title/IPv6#Stateless_autoconfiguration_(SLAAC)>)),
-- allow returning packets for established connections,
-- ssh protection
-- block all else.
-
 ```bash
 #!/usr/bin/nft -f
 
