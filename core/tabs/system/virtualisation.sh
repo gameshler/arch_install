@@ -42,7 +42,7 @@ setupLibvirt() {
     printf "%b\n" "Configuring Libvirt."
 
     sudo "$PACKAGER" -S --needed --noconfirm dnsmasq
-    sudo sed -i 's/^#\?firewall_backend\s*=\s*".*"/firewall_backend = "nftables"/' "/etc/libvirt/90-network.conf"
+    sudo sed -i 's/^#\?firewall_backend\s*=\s*".*"/firewall_backend = "nftables"/' "/etc/libvirt/network.conf"
 
     if systemctl is-active --quiet polkit; then
         sudo sed -i 's/^#\?auth_unix_ro\s*=\s*".*"/auth_unix_ro = "polkit"/' "/etc/libvirt/libvirtd.conf"
