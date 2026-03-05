@@ -1,0 +1,108 @@
+#!/bin/sh -e
+
+. "$COMMON_SCRIPT"
+
+installNftables() {
+    if ! command_exists nft; then
+        printf "%b\n" "Installing nftables..."
+        case "$PACKAGER" in
+        pacman)
+            sudo "$PACKAGER" -S --needed --noconfirm nftables
+            ;;
+        *)
+            printf "%b\n" "Unsupported package manager: ""$PACKAGER"
+            exit 1
+            ;;
+        esac
+    else
+        printf "%b\n" "nftables is already installed."
+    fi
+}
+
+configureNftables() {
+    sudo bash -c '
+    cat > /etc/nftables.conf << 'EOF'
+
+#!/usr/bin/nft -f
+
+destroy table inet filter
+table inet filter {
+  chain input {
+    type filter hook input priority 0;
+    policy drop;
+
+    ct state invalid drop comment "drop invalid connections"
+    ct state {established, related} accept comment "allow established/related"
+    iif lo accept comment "allow loopback"
+    iif != lo ip daddr 127.0.0.1/8 drop comment "block spoofed loopback"
+    iif != lo ip6 daddr ::1/128 drop comment "block IPv6 loopback spoofing"
+
+    # Rate-limited ICMP
+    ip protocol icmp limit rate 4/second accept comment "allow ICMP"
+    meta l4proto ipv6-icmp limit rate 4/second accept comment "allow ICMPv6"
+
+    # SSH brute-force protection
+    meter ssh_conn_limit { ip saddr timeout 30s limit rate 6/minute } tcp dport 22 jump ssh_check comment "rate-limited SSH"
+
+    # Web services
+    tcp dport {80, 443} accept comment "allow HTTP/HTTPS"
+
+    # Libvirt (VMs)
+    iif virbr0 ct state {established, related, new} accept comment "allow VM traffic"
+
+    # Block spoofed private IPs on external interface
+    iif enp5s0 ip saddr { 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.0/8 } drop comment "anti-spoofing"
+
+    # Final logging and drop
+    log prefix "DROP: " level warn counter drop comment "log and drop"
+  }
+
+  chain ssh_check {
+    tcp dport 22 counter accept comment "SSH accepted"
+  }
+
+  chain forward {
+    type filter hook forward priority 0; policy drop;
+
+    # VM outbound
+    iif virbr0 oif enp5s0 accept comment "VMs to external"
+    # Allow replies
+    iif enp5s0 oif virbr0 ct state {established, related} accept comment "external replies"
+  }
+
+  chain output {
+    type filter hook output priority 0;
+    policy accept;
+  }
+}
+
+EOF
+
+systemctl enable --now nftables
+
+    cat > /etc/sysctl.d/90-network.conf << 'EOF'
+# Do not act as a router
+net.ipv4.ip_forward = 0
+net.ipv6.conf.all.forwarding = 0
+
+# SYN flood protection
+net.ipv4.tcp_syncookies = 1
+
+# Disable ICMP redirect
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv4.conf.all.secure_redirects = 0
+net.ipv4.conf.default.secure_redirects = 0
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+
+# Do not send ICMP redirects
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+EOF
+    sysctl --system
+'
+}
+
+installNftables
+configureNftables
