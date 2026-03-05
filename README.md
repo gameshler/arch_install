@@ -514,12 +514,17 @@ sbctl status
 
 ```bash
 sbctl create-keys
+sbctl list-files
+sbctl verify
+
 # Dracut
 sbctl sign -s /boot/efi/EFI/Linux/bootx64.efi
 
 # mkinitcpio
 sbctl sign -s /boot/efi/EFI/Linux/arch-linux.efi
 sbctl sign -s /boot/efi/EFI/Linux/arch-linux-lts.efi
+sbctl sign -s /boot/efi/EFI/BOOT/BOOTX64.EFI
+sbctl sign -s /boot/efi/EFI/systemd/systemd-bootx64.efi
 ```
 
 > [!NOTE]  
