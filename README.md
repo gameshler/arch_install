@@ -602,35 +602,54 @@ Edit the `/etc/nftables.conf`. Proposed firewall rules:
 destroy table inet filter
 table inet filter {
   chain input {
-    type filter hook input priority filter
-    policy drop
+    type filter hook input priority 0;
+    policy drop;
 
-    ct state invalid drop comment "early drop of invalid connections"
-    ct state {established, related} accept comment "allow tracked connections"
-    iif lo accept comment "allow from loopback"
-    ip protocol icmp accept comment "allow icmp"
-    meta l4proto ipv6-icmp accept comment "allow icmp v6"
-    meter ssh_conn_limit { ip saddr timeout 30s limit rate 6/minute } counter jump ssh_check
-    tcp dport 22 accept comment "allow SSH"
-    tcp dport 80 accept comment "allow HTTP"
-    tcp dport 443 accept comment "allow HTTPS"
-    iif virbr0 ct state {established, related} accept comment "allow libvirt incoming"
-    iif virbr0 accept comment "allow libvirt bridge"
-    pkttype host limit rate 5/second counter reject with icmpx type admin-prohibited
-    counter
+    ct state invalid drop comment "drop invalid connections"
+    ct state {established, related} accept comment "allow established/related"
+    iif lo accept comment "allow loopback"
+    iif != lo ip daddr 127.0.0.1/8 drop comment "block spoofed loopback"
+    iif != lo ip6 daddr ::1/128 drop comment "block IPv6 loopback spoofing"
+
+    # Rate-limited ICMP
+    ip protocol icmp limit rate 4/second accept comment "allow ICMP"
+    meta l4proto ipv6-icmp limit rate 4/second accept comment "allow ICMPv6"
+
+    # SSH brute-force protection
+    meter ssh_conn_limit { ip saddr timeout 30s limit rate 6/minute } tcp dport 22 jump ssh_check comment "rate-limited SSH"
+
+    # Web services
+    tcp dport {80, 443} accept comment "allow HTTP/HTTPS"
+
+    # Libvirt (VMs)
+    iif virbr0 ct state {established, related, new} accept comment "allow VM traffic"
+
+    # Block spoofed private IPs on external interface
+    iif enp5s0 ip saddr { 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.0/8 } drop comment "anti-spoofing"
+
+    # Final logging and drop
+    log prefix "DROP: " level warn counter drop comment "log and drop"
   }
 
   chain ssh_check {
-    tcp dport 22 counter accept comment "SSH passed brute-force check"
+    tcp dport 22 counter accept comment "SSH accepted"
   }
 
   chain forward {
-    type filter hook forward priority filter
-    policy drop
-    iif virbr0 oif enp5s0 accept comment "allow VMs to access external network"
-    iif enp5s0 oif virbr0 ct state {established, related} accept comment "allow external replies"
+    type filter hook forward priority 0; policy drop;
+
+    # VM outbound
+    iif virbr0 oif enp5s0 accept comment "VMs to external"
+    # Allow replies
+    iif enp5s0 oif virbr0 ct state {established, related} accept comment "external replies"
+  }
+
+  chain output {
+    type filter hook output priority 0;
+    policy accept;
   }
 }
+
 ```
 
 Enable the nftables service and list loaded rules for confirmation:
