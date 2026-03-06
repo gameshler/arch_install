@@ -293,11 +293,6 @@ cd() {
     fi
 }
 
-# Automatically install the needed support files for this .bashrc file
-install_bashrc_support() {
-    sudo multitail tree trash-cli fzf bash-completion fastfetch
-}
-
 # Trim leading and trailing spaces (for scripts)
 trim() {
     local var=$*
