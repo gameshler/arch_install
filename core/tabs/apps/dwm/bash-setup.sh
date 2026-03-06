@@ -5,13 +5,12 @@
 gitpath="$HOME/.local/share/bash"
 
 installDepend() {
-    if [ ! -f "/usr/share/bash-completion/bash_completion" ] || ! command_exists bash tar bat tree unzip fc-list git; then
+    if [ ! -f "/usr/share/bash-completion/bash_completion" ] || ! command_exists bash tar bat tree unzip fc-list git multitail trash fastfetch fzf; then
         printf "%b\n" "Installing Bash..."
         case "$PACKAGER" in
         pacman)
-            sudo "$PACKAGER" -S --needed --noconfirm bash bash-completion tar bat tree unzip fontconfig git fzf
+            sudo "$PACKAGER" -S --needed --noconfirm bash bash-completion tar bat tree unzip fontconfig git fzf multitail trash-cli fastfetch
             ;;
-
         *)
             printf "%b\n" "Unsupported package manager: ""$PACKAGER"
             exit 1
