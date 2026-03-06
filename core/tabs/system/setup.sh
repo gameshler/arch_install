@@ -90,7 +90,8 @@ main() {
     choose_installation
     sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
     sudo reflector --verbose --protocol https -a 48 -c $COUNTRY_CODE --score 5 -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
-    systemctl enable --now reflector.timer
+    sudo systemctl enable reflector.service
+    sudo systemctl enable --now reflector.timer
 
     if echo "${gpu_type}" | grep -E "NVIDIA|GeForce"; then
         # check if flatpak is installed
