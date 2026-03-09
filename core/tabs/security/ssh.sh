@@ -22,7 +22,7 @@ installOpenssh() {
 generate_ssh_key() {
     if [ ! -f ~/.ssh/id_ed25519 ]; then
         printf "%b\n" "SSH key not found, generating one..."
-        ssh-keygen -t ed25519 -C "$(whoami)@$(hostname)"
+        ssh-keygen -t ed25519 -C "$(whoami)@$HOSTNAME"
         eval "$(ssh-agent -s)"
 
     else
