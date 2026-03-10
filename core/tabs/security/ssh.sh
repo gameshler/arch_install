@@ -46,10 +46,9 @@ configure_ssh() {
     mkdir -p "/etc/ssh/sshd_config" 
     fi
     
-    # Port 566 (change as needed)
-    sudo sed -i '/^#*Port[[:space:]]/d' /etc/ssh/sshd_config
-    sudo sed -i '/^Port[[:space:]]/d' /etc/ssh/sshd_config
-    echo "Port 566" | sudo tee -a /etc/ssh/sshd_config >/dev/null
+    # Port 
+    sudo sed -i '/^[[:space:]]*#*[Pp]ort[[:space:]]\+[0-9]/d' /etc/ssh/sshd_config
+    sudo sed -i "1i Port $SSH_PORT" /etc/ssh/sshd_config
 
     # AddressFamily inet
     sudo sed -i 's/^#*AddressFamily.*/AddressFamily inet/' /etc/ssh/sshd_config ||
