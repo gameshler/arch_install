@@ -30,7 +30,7 @@ setupBash() {
         src="$FILES/$file"
         dest="$gitpath/$file"
         if [ -f "$src" ]; then
-            cp "$src" "$dest"
+            cat "$src" >> "$dest"
         else
             echo "Warning: $src not found, skipping."
         fi
