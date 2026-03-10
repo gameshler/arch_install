@@ -141,6 +141,10 @@ main() {
     NVM_VERSION="v0.40.4"
     curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh | bash
 
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+    
     printf "%b\n" "Installing Node.js v25 via nvm"
     nvm install 25
     nvm alias default 25
