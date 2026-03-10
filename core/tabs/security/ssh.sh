@@ -20,6 +20,14 @@ installOpenssh() {
 }
 
 generate_ssh_key() {
+
+if [ ! -f /etc/ssh/ssh_host_ed25519_key ] && \
+       [ ! -f /etc/ssh/ssh_host_rsa_key ] && \
+       [ ! -f /etc/ssh/ssh_host_ecdsa_key ]; then
+        echo "Generating SSH host keys..."
+        sudo ssh-keygen -A   # generates all default host keys
+    fi
+    
     if [ ! -f ~/.ssh/id_ed25519 ]; then
         printf "%b\n" "SSH key not found, generating one..."
        
