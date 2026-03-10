@@ -138,12 +138,8 @@ main() {
 
     # NVM install
     printf "%b\n" "Installing NVM"
-    export NVM_VERSION="v0.40.3"
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh | PROFILE="$HOME/.bash_profile" bash
-
-    export NVM_DIR="$HOME/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+    NVM_VERSION="v0.40.4"
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh | bash
 
     printf "%b\n" "Installing Node.js v25 via nvm"
     nvm install 25
@@ -152,27 +148,7 @@ main() {
     # pnpm global tools
     printf "%b\n" "Installing pnpm"
     curl -fsSL https://get.pnpm.io/install.sh | sh -
-    export PNPM_HOME="$HOME/.local/share/pnpm"
-
-    echo 'export PNPM_HOME="$HOME/.local/share/pnpm"' >>"$HOME/.bashrc"
-    echo '[[ ":$PATH:" == *":$PNPM_HOME:"* ]] || export PATH="$PNPM_HOME:$PATH"' >>"$HOME/.bashrc"
-
-    echo 'export PNPM_HOME="$HOME/.local/share/pnpm"' >>"$HOME/.bash_profile"
-    echo '[[ ":$PATH:" == *":$PNPM_HOME:"* ]] || export PATH="$PNPM_HOME:$PATH"' >>"$HOME/.bash_profile"
-
-    cat >>"$HOME/.bash_profile" <<'EOF'
-
-if [ -d "$HOME/.nvm" ]; then
-    export NVM_DIR="$HOME/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  
-    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-    nvm use default 2>/dev/null || true
-fi
-
-EOF
-
-    . "$HOME/.bashrc" || true
-
+    
     # Dotfiles array
     dotfiles=(.gitignore .gitconfig)
 
@@ -186,9 +162,10 @@ EOF
         fi
     done
 
+    . "$HOME/.bashrc" || true
+
     printf "%b\n" "Setup completed successfully!"
 
-    exec bash -l
 }
 
 main
