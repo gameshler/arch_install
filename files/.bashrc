@@ -13,6 +13,12 @@ elif [ -f /etc/bash_completion ]; then
     . /etc/bash_completion
 fi
 
+export PNPM_HOME="$HOME/.local/share/pnpm"
+case ":$PATH:" in 
+    *":$PNPM_HOME:"*) ;;
+    *) export PATH="$PNPM_HOME:$PATH" ;;
+esac
+
 # Disable the bell
 if [[ $iatest -gt 0 ]]; then bind "set bell-style visible"; fi
 
