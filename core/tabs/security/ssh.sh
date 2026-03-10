@@ -22,6 +22,7 @@ installOpenssh() {
 generate_ssh_key() {
     if [ ! -f ~/.ssh/id_ed25519 ]; then
         printf "%b\n" "SSH key not found, generating one..."
+        ssh-keygen -A
         ssh-keygen -t ed25519 -C "$(whoami)@$HOSTNAME"
         eval "$(ssh-agent -s)"
 
@@ -60,7 +61,6 @@ configure_ssh() {
 
     # Test and restart
     sudo sshd -t && sudo systemctl restart sshd || {
-        printf "Config error!\n"
         exit 1
     }
     printf "%b\\n" "SSH configured successfully."
