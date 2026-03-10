@@ -60,7 +60,7 @@ if command -v rg &>/dev/null; then
     # Alias grep to rg if ripgrep is installed
     alias grep='rg'
 else
-    # Alias grep to /usr/bin/grep with GREP_OPTIONS if ripgrep is not installed
+    # Alias grep to /usr/bin/grep if ripgrep is not installed
     alias grep="/usr/bin/grep"
 fi
 
