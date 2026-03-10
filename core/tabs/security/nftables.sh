@@ -20,7 +20,14 @@ installNftables() {
 }
 
 configureNftables() {
-    sudo bash -c '
+# Detect interface used for default route
+    WAN_IF=$(ip route | awk '/^default/ {print $5; exit}')
+    if [ -z "$WAN_IF" ]; then
+        printf "%b\n" "Could not detect default interface, aborting nftables configuration."
+        exit 1
+    fi
+
+    sudo WAN_IF="$WAN_IF" bash -c '
     cat > /etc/nftables.conf << 'EOF'
 
 #!/usr/bin/nft -f
@@ -51,7 +58,7 @@ table inet filter {
     iif virbr0 ct state {established, related, new} accept comment "allow VM traffic"
 
     # Block spoofed private IPs on external interface
-    iif enp5s0 ip saddr { 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.0/8 } drop comment "anti-spoofing"
+    iif "$WAN_IF" ip saddr { 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.0/8 } drop comment "anti-spoofing"
 
     # Final logging and drop
     log prefix "DROP: " level warn counter drop comment "log and drop"
