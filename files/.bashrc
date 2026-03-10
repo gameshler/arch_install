@@ -61,9 +61,8 @@ if command -v rg &>/dev/null; then
     alias grep='rg'
 else
     # Alias grep to /usr/bin/grep with GREP_OPTIONS if ripgrep is not installed
-    alias grep="/usr/bin/grep $GREP_OPTIONS"
+    alias grep="/usr/bin/grep"
 fi
-unset GREP_OPTIONS
 
 # Color for manpages in less makes manpages a little easier to read
 export LESS_TERMCAP_mb=$'\E[01;31m'
