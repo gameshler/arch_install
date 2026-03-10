@@ -64,10 +64,8 @@ table inet filter {
   chain forward {
     type filter hook forward priority 0; policy drop;
 
-    # VM outbound
-    iif virbr0 oif enp5s0 accept comment "VMs to external"
-    # Allow replies
-    iif enp5s0 oif virbr0 ct state {established, related} accept comment "external replies"
+    ct state {established, related} accept comment "allow forwarded replies"
+    iif "virbr0" accept comment "allow VM forwarding"
   }
 
   chain output {
