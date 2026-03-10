@@ -49,7 +49,7 @@ table inet filter {
     meta l4proto ipv6-icmp limit rate 4/second accept comment "allow ICMPv6"
 
     # SSH brute-force protection
-    tcp dport 22 ct state new meter ssh_conn_limit { ip saddr timeout 30s limit rate 6/minute } jump ssh_check
+    tcp dport $SSH_PORT ct state new meter ssh_conn_limit { ip saddr timeout 30s limit rate 6/minute } jump ssh_check
 
     # Web services
     tcp dport {80, 443} accept comment "allow HTTP/HTTPS"
@@ -65,7 +65,7 @@ table inet filter {
   }
 
   chain ssh_check {
-    tcp dport 22 counter accept comment "SSH accepted"
+    tcp dport $SSH_PORT counter accept comment "SSH accepted"
   }
 
   chain forward {
