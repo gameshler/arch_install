@@ -27,7 +27,7 @@ configureNftables() {
         exit 1
     fi
 
-    sudo WAN_IF="$WAN_IF" bash -c '
+    sudo WAN_IF="$WAN_IF" SSH_PORT="$SSH_PORT" bash -c '
     cat > /etc/nftables.conf << 'EOF'
 
 #!/usr/bin/nft -f
