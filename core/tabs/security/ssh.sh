@@ -42,10 +42,6 @@ if [ ! -f /etc/ssh/ssh_host_ed25519_key ] && \
 configure_ssh() {
     printf "%b\\n" "Configuring SSH server..."
     
-    if [ ! -f /etc/ssh/sshd_config ]; then
-    mkdir -p "/etc/ssh/sshd_config" 
-    fi
-    
     # Port 
     sudo sed -i "/^[[:space:]]*\(#[[:space:]]*\)\?AddressFamily[[:space:]]/i Port $SSH_PORT" /etc/ssh/sshd_config
 
