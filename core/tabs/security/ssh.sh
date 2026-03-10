@@ -44,7 +44,7 @@ configure_ssh() {
     
     # Port 
     sudo sed -i 's/^#*Port.*/Port $SSH_PORT/' /etc/ssh/sshd_config ||
-        echo "Port SSH_PORT" | sudo tee -a /etc/ssh/sshd_config >/dev/null
+        echo "Port $SSH_PORT" | sudo tee -a /etc/ssh/sshd_config >/dev/null
 
     # AddressFamily inet
     sudo sed -i 's/^#*AddressFamily.*/AddressFamily inet/' /etc/ssh/sshd_config ||
