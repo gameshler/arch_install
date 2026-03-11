@@ -1,0 +1,45 @@
+#!/bin/sh -e
+
+. "$COMMON_SCRIPT"
+
+installPkg() {
+    if ! command_exists ufw; then
+        printf "%b\n" "Installing Firewall..."
+        case "$PACKAGER" in
+        pacman)
+            sudo "$PACKAGER" -S --needed --noconfirm ufw
+            ;;
+        *)
+            printf "%b\n" "Unsupported package manager: ""$PACKAGER"
+            exit 1
+            ;;
+        esac
+    else
+        printf "%b\n" "UFW is already installed."
+    fi
+}
+
+configureUFW() {
+    printf "%b\n" "Recommended Firewall Rules"
+
+    printf "%b\n" "Disabling UFW"
+    sudo ufw disable
+    printf "%b\n" "Limiting Port 22/tcp"
+    sudo ufw limit 22/tcp
+    printf "%b\n" "Allowing Port 80/tcp"
+    sudo ufw allow 80/tcp
+    printf "%b\n" "Allowing Port 443/tcp"
+    sudo ufw allow 443/tcp
+    printf "%b\n" "Deny Incoming Packets by Default"
+    sudo ufw default deny incoming
+    printf "%b\n" "Allow Outcoming Packets by Default"
+    sudo ufw default allow outgoing
+    printf "%b\n" "Enabling UFW"
+    sudo ufw enable
+
+    printf "%b\n" "Enabled Firewall with UFW"
+
+}
+
+installPkg
+configureUFW

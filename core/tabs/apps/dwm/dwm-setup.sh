@@ -4,15 +4,15 @@
 
 isServiceActive() {
     case "$INIT_MANAGER" in
-        systemctl)
-            sudo "$INIT_MANAGER" is-active --quiet "$1"
-            ;;
-        rc-service)
-            sudo "$INIT_MANAGER" "$1" status --quiet
-            ;;
-        sv)
-            sudo "$INIT_MANAGER" status "$1" >/dev/null 2>&1
-            ;;
+    systemctl)
+        sudo "$INIT_MANAGER" is-active --quiet "$1"
+        ;;
+    rc-service)
+        sudo "$INIT_MANAGER" "$1" status --quiet
+        ;;
+    sv)
+        sudo "$INIT_MANAGER" status "$1" >/dev/null 2>&1
+        ;;
     esac
 }
 
@@ -23,7 +23,7 @@ setupDWM() {
         sudo "$PACKAGER" -S --needed --noconfirm base-devel libx11 libxinerama libxft imlib2 git unzip flameshot nwg-look feh mate-polkit alsa-utils ghostty rofi xclip xarchiver thunar tumbler tldr gvfs thunar-archive-plugin dunst feh nwg-look dex xscreensaver xorg-xprop polybar picom xdg-user-dirs xdg-desktop-portal-gtk pipewire pipewire-pulse pavucontrol gnome-keyring flatpak networkmanager network-manager-applet tmux
         ;;
     *)
-        printf "%b\n" "Unsupported package manager: ""$PACKAGER"""
+        printf "%b\n" "Unsupported package manager: ""$PACKAGER"
         exit 1
         ;;
     esac
@@ -171,7 +171,6 @@ setupDisplayManager() {
 
     fi
 }
-
 
 setupDisplayManager
 setupDWM

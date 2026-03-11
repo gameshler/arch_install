@@ -21,4 +21,3 @@ installLibreWolf() {
 
 checkAurHelper
 installLibreWolf
-

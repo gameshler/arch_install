@@ -20,4 +20,3 @@ installThrorium() {
 }
 checkAurHelper
 installThrorium
-

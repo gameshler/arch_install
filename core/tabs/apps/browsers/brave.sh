@@ -1,6 +1,6 @@
 #!/bin/sh -e
 
-. "$COMMON_SCRIPT" 
+. "$COMMON_SCRIPT"
 
 installBrave() {
     if ! command_exists com.brave.Browser && ! command_exists brave; then
@@ -10,6 +10,5 @@ installBrave() {
         printf "%b\n" "Brave Browser is already installed."
     fi
 }
-
 
 installBrave

@@ -20,4 +20,3 @@ installGithubDesktop() {
 }
 checkAurHelper
 installGithubDesktop
-

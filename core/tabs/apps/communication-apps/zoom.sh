@@ -20,4 +20,3 @@ installZoom() {
 }
 checkAurHelper
 installZoom
-

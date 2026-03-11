@@ -20,4 +20,3 @@ installDiscord() {
 }
 
 installDiscord
-

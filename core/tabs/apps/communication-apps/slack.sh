@@ -20,4 +20,3 @@ installSlack() {
 }
 checkAurHelper
 installSlack
-

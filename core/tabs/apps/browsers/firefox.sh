@@ -10,7 +10,7 @@ installFirefox() {
             sudo "$PACKAGER" -S --needed --noconfirm firefox
             ;;
         *)
-            printf "%b\n" "Unsupported package manager: ""$PACKAGER"""
+            printf "%b\n" "Unsupported package manager: ""$PACKAGER"
             exit 1
             ;;
         esac
@@ -19,6 +19,4 @@ installFirefox() {
     fi
 }
 
-
 installFirefox
-

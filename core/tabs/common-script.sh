@@ -44,7 +44,8 @@ checkFlatpak() {
             sudo "$PACKAGER" -S --needed --noconfirm flatpak
             ;;
         *)
-            sudo "$PACKAGER" install -y flatpak
+            printf "%b\n" "Unsupported package manager: ""$PACKAGER"
+            exit 1
             ;;
         esac
         printf "%b\n" "Adding Flathub remote..."
@@ -109,4 +110,5 @@ check_init_manager() {
 
     checkPackageManager "pacman"
     check_init_manager 'systemctl rc-service sv'
+
 

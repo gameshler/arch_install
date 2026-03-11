@@ -20,4 +20,3 @@ installTelegram() {
 }
 
 installTelegram
-

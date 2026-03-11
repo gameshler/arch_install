@@ -14,7 +14,7 @@ choose_installation() {
     for code in "${options[@]}"; do
         printf "%2d)%s " "$i" "$code"
         ((i++))
-        if (( (i-1) % 10 == 0 )); then printf "\n"; fi
+        if (((i - 1) % 10 == 0)); then printf "\n"; fi
     done
     printf "\n"
 
@@ -57,54 +57,18 @@ main() {
     fi
 
     sudo "$PACKAGER" -Syyu --noconfirm
-    printf "%b\n" "Installing packages"
-    gpu_type=$(lspci | grep -E "VGA|3D|Display")
-    case "$gpu_type" in
-    *NVIDIA* | *GeForce*)
-        echo "Installing NVIDIA drivers: nvidia-lts"
-        sudo "$PACKAGER" -S --noconfirm --needed nvidia-lts nvidia-dkms nvidia-utils nvidia-settings
-        ;;
-    *Radeon* | *AMD*)
-        echo "Installing AMD drivers: xf86-video-amdgpu"
-        sudo "$PACKAGER" -S --noconfirm --needed vulkan-radeon lib32-vulkan-radeon mesa lib32-mesa xf86-video-amdgpu libva-mesa-driver lib32-libva-mesa-driver
-        ;;
-    *Integrated\ Graphics\ Controller*)
-        echo "Installing Intel drivers:"
-        sudo "$PACKAGER" -S --noconfirm --needed libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa
-        ;;
-    *Intel\ Corporation\ UHD*)
-        echo "Installing Intel UHD drivers:"
-        sudo "$PACKAGER" -S --noconfirm --needed libva-intel-driver libvdpau-va-gl lib32-vulkan-intel vulkan-intel libva-intel-driver libva-utils lib32-mesa
-        ;;
-    *)
-        echo "Unknown GPU type: $gpu_type"
-        ;;
-    esac
 
     install_packages "$PACKAGER" \
         libreoffice-fresh vlc curl flatpak fastfetch p7zip unrar tar rsync \
         exfat-utils fuse-exfat flac jdk-openjdk gimp \
-        base-devel mangohud lib32-mangohud corectrl openssh \
-        htop steam reflector git nftables
+        base-devel mangohud lib32-mangohud \
+        htop steam reflector git
 
     choose_installation
     sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
-    sudo reflector --verbose --protocol https -a 6 -c $COUNTRY_CODE --score 15 -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
+    sudo reflector --verbose --protocol https -a 6 -c "$COUNTRY_CODE" --score 15 -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
     sudo systemctl enable reflector.service
     sudo systemctl enable --now reflector.timer
-
-    if echo "${gpu_type}" | grep -E "NVIDIA|GeForce"; then
-        # check if flatpak is installed
-        printf "%b\n" "Setting up GreenWithEnvy"
-        flatpak --user remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-        flatpak --user install flathub com.leinardi.gwe
-        flatpak update
-    elif echo "${gpu_type}" | grep 'VGA' | grep -E "Radeon|AMD"; then
-        # corectrl autostart setup
-        printf "%b\n" "Setting up corectrl autostart"
-        mkdir -p "$HOME/.config/autostart"
-        cp /usr/share/applications/org.corectrl.CoreCtrl.desktop "$HOME/.config/autostart/org.corectrl.CoreCtrl.desktop" || true
-    fi
 
     # mangohud config
     printf "%b\n" "Configuring MangoHud"
@@ -135,38 +99,6 @@ main() {
     for setting in "${settings_to_uncomment[@]}"; do
         sed -i -E "s/^\s*#\s*(${setting})(\s*(=|$))/${setting}\2/" "$config_file"
     done
-
-    # NVM install
-    printf "%b\n" "Installing NVM"
-    NVM_VERSION="v0.40.4"
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/$NVM_VERSION/install.sh | bash
-
-    export NVM_DIR="$HOME/.nvm"
-    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-    [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-    
-    printf "%b\n" "Installing Node.js v25 via nvm"
-    nvm install 25
-    nvm alias default 25
-
-    # pnpm global tools
-    printf "%b\n" "Installing pnpm"
-    curl -fsSL https://get.pnpm.io/install.sh | sh -
-    
-    # Dotfiles array
-    dotfiles=(.gitignore .gitconfig)
-
-    for dotfile in "${dotfiles[@]}"; do
-        src="$FILES/$dotfile"
-        dest="$HOME/$dotfile"
-        if [ -f "$src" ]; then
-            cp "$src" "$dest"
-        else
-            echo "Warning: $src not found, skipping."
-        fi
-    done
-
-    . "$HOME/.bashrc" || true
 
     printf "%b\n" "Setup completed successfully!"
 
