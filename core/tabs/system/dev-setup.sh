@@ -26,8 +26,6 @@ main() {
     nvm install 25
     nvm alias default 25
 
-    pnpm install -g license gitignore
-
     dotfiles=(.gitignore .gitconfig)
 
     for dotfile in "${dotfiles[@]}"; do
