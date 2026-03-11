@@ -62,7 +62,7 @@ main() {
     case "$gpu_type" in
     *NVIDIA* | *GeForce*)
         echo "Installing NVIDIA drivers: nvidia-lts"
-        sudo "$PACKAGER" -S --noconfirm --needed nvidia-lts
+        sudo "$PACKAGER" -S --noconfirm --needed nvidia-lts nvidia-dkms nvidia-utils nvidia-settings
         ;;
     *Radeon* | *AMD*)
         echo "Installing AMD drivers: xf86-video-amdgpu"
