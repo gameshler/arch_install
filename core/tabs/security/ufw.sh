@@ -24,8 +24,8 @@ configureUFW() {
 
     printf "%b\n" "Disabling UFW"
     sudo ufw disable
-    printf "%b\n" "Limiting Port 22/tcp"
-    sudo ufw limit 22/tcp
+    printf "%b\n" "Limiting Port $SSH_PORT/tcp"
+    sudo ufw limit "$SSH_PORT"/tcp
     printf "%b\n" "Allowing Port 80/tcp"
     sudo ufw allow 80/tcp
     printf "%b\n" "Allowing Port 443/tcp"
