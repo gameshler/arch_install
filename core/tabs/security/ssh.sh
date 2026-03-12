@@ -75,4 +75,5 @@ configure_ssh() {
 
 installOpenssh
 generate_ssh_key
+ssh_port
 configure_ssh
