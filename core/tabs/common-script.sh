@@ -107,6 +107,11 @@ check_init_manager() {
     exit 1
 }
 
+ssh_port() {
+    local port
+    read -p "What is your preferred SSH port? " port
+    export SSH_PORT="$port"
+}
 
     checkPackageManager "pacman"
     check_init_manager 'systemctl rc-service sv'
