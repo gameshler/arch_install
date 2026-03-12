@@ -109,8 +109,9 @@ check_init_manager() {
 
 ssh_port() {
     if [ -z "${SSH_PORT:-}" ]; then
-        read -rp "What is your preferred SSH port? " port
-        export SSH_PORT="$port"
+        printf "%s" "What is your preferred SSH port? "
+        read SSH_PORT
+        export SSH_PORT
     fi
 }
 
