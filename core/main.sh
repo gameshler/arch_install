@@ -7,6 +7,7 @@ export FILES="$INSTALL_DIR/files"
 export TABS_DIR="$INSTALL_DIR/core/tabs"
 export COMMON_SCRIPT="$TABS_DIR/common-script.sh"
 export AUTO_MOUNT="$TABS_DIR/utils/auto-mount.sh"
+export SSH_PORT=556
 
 pause() {
     read -rp $'\nPress Enter to return...'
