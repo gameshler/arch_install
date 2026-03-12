@@ -42,5 +42,4 @@ configureUFW() {
 }
 
 installPkg
-ssh_port
 configureUFW
