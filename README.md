@@ -615,10 +615,10 @@ table inet filter {
     tcp dport {80, 443} accept comment "allow HTTP/HTTPS"
 
     # Libvirt (VMs)
-    iif virbr0 ct state {established, related, new} accept comment "allow VM traffic"
+    iifname "virbr0" ct state {established, related, new} accept comment "allow VM traffic"
 
     # Block spoofed private IPs on external interface
-    iif enp5s0 ip saddr { 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.0/8 } drop comment "anti-spoofing"
+    iifname "eth0" ip saddr { 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.0/8 } drop comment "anti-spoofing"
 
     # Final logging and drop
     log prefix "DROP: " level warn counter drop comment "log and drop"
@@ -631,10 +631,8 @@ table inet filter {
   chain forward {
     type filter hook forward priority 0; policy drop;
 
-    # VM outbound
-    iif virbr0 oif enp5s0 accept comment "VMs to external"
-    # Allow replies
-    iif enp5s0 oif virbr0 ct state {established, related} accept comment "external replies"
+    ct state {established, related} accept comment "allow forwarded replies"
+    iifname "virbr0" accept comment "allow VM forwarding"
   }
 
   chain output {
