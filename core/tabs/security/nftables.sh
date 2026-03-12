@@ -110,4 +110,5 @@ EOF
 }
 
 installNftables
+ssh_port
 configureNftables
