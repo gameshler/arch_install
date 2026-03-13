@@ -122,7 +122,7 @@ Create and configure LVM inside the encrypted container:
 pvcreate /dev/mapper/cryptlvm
 vgcreate vg /dev/mapper/cryptlvm
 lvcreate -L 32G vg -n swap
-lvcreate -L 40G vg -n root
+lvcreate -L 100G vg -n root
 lvcreate -l 100%FREE vg -n home
 mkfs.ext4 /dev/vg/root
 mkfs.ext4 /dev/vg/home
