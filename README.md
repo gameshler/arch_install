@@ -834,14 +834,14 @@ See installation instructions [here](https://github.com/nvm-sh/nvm#installing-an
 OR run this command (make sure v0.40.3 is still the latest)
 
 ```
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.3/install.sh | bash
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bash
 ```
 
 Now that nvm is installed, you can install a specific version of node.js and use it:
 
 ```
-nvm install 22
-nvm use 22
+nvm install 25
+nvm use 25
 node --version
 ```
 
