@@ -62,6 +62,14 @@ Before you begin, ensure:
 - You can enroll your own Secure Boot keys.
 - You are aware of manufacturer firmware features or potential backdoors.
 
+## System Automation 
+
+Run the full setup using: 
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/gameshler/arch-gameshler/main/start.sh)
+```
+
 ## Preparing the Installation Media
 
 Download the latest official [Archlinux ISO](https://archlinux.org/download/) and flash it to a USB drive:
@@ -727,14 +735,6 @@ Edit `.bash_profile`
 
 ```bash
 startx
-```
-
-# System Automation 
-
-Run the full setup using: 
-
-```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/gameshler/arch-gameshler/main/start.sh)
 ```
 
 ## Applications and Packages
