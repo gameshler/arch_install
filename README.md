@@ -93,6 +93,23 @@ If on a laptop, start `iwctl`:
 > [!NOTE]  
 > Adjust device paths (/dev/nvme0n1, /dev/sda, etc.) as appropriate for your system. Use `lsblk` to confirm.
 
+**Erasing Data**
+
+```bash
+# HDD
+dd if=/dev/zero of=/dev/sdX bs=1M status=progress
+sync 
+
+# nvme 
+nvme sanitize /dev/nvme0n1 -a 2
+   or
+nvme format /dev/nvme0n1 --ses=1
+
+# SSD
+blkdiscard -f /dev/sdX 
+
+```
+
 **Wiping and Creating the Partition Table**
 
 Wipe existing data and create a new GPT:
