@@ -23,7 +23,7 @@ installLACT() {
 installGpuDriver() {
 
     printf "%b\n" "Installing GPU Drivers"
-    gpu_type=$(lspci | grep -E "VGA|3D|Display")
+    gpu_type=$(lspci | grep "VGA|3D|Display")
     case "$gpu_type" in
     *NVIDIA* | *GeForce*)
         echo "Installing NVIDIA drivers"
