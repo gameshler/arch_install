@@ -65,7 +65,7 @@ main() {
         htop steam reflector git
 
     choose_installation
-    sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.backup
+    sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
     sudo reflector --verbose --protocol https -a 6 -c "$COUNTRY_CODE" --score 15 -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
     sudo systemctl enable reflector.service
     sudo systemctl enable --now reflector.timer
