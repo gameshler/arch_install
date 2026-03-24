@@ -82,6 +82,14 @@ clone_config_folders() {
     # Copy scripts to local bin
     cp -rf "$HOME/.local/share/dwm/scripts/." "$HOME/.local/bin/"
 
+    FONT_DIR="$HOME/.local/share/fonts"
+    mkdir -p "$FONT_DIR"
+    if [ -d "$HOME/.local/share/dwm/polybar/fonts" ]; then
+        cp -r "$HOME/.local/share/dwm/polybar/fonts/"* "$FONT_DIR/"
+        fc-cache -fv
+        printf "%b\n" "Polybar icon fonts installed"
+    fi
+    
     # Iterate over all directories in config/*
     for dir in config/*/; do
         # Extract the directory name
