@@ -20,7 +20,7 @@ setupDWM() {
     printf "%b\n" "Installing DWM..."
     case "$PACKAGER" in
     pacman)
-        sudo "$PACKAGER" -S --needed --noconfirm base-devel libx11 libxinerama libxft imlib2 git unzip flameshot nwg-look feh mate-polkit alsa-utils ghostty rofi xclip xarchiver thunar tumbler tldr gvfs thunar-archive-plugin dunst feh nwg-look dex xscreensaver xorg-xprop polybar picom xdg-user-dirs xdg-desktop-portal-gtk pipewire pipewire-pulse pavucontrol gnome-keyring flatpak networkmanager network-manager-applet tmux
+        sudo "$PACKAGER" -S --needed --noconfirm base-devel libx11 libxinerama libxft imlib2 libxcb git unzip flameshot nwg-look feh mate-polkit alsa-utils ghostty rofi xclip xarchiver thunar tumbler tldr gvfs thunar-archive-plugin dunst dex xscreensaver xorg-xprop xorg-xrandr xorg-xsetroot xorg-xset polybar picom xdg-user-dirs xdg-desktop-portal-gtk pipewire pavucontrol gnome-keyring flatpak networkmanager network-manager-applet noto-fonts-emoji pipewire-pulse tmux
         ;;
     *)
         printf "%b\n" "Unsupported package manager: ""$PACKAGER"
