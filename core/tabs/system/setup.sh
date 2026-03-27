@@ -66,7 +66,10 @@ main() {
 
     choose_installation
     sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
-    sudo reflector --verbose --protocol https -a 6 -c "$COUNTRY_CODE" --score 15 -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
+    
+    sudo reflector --verbose --protocol https -a 24 -c "$COUNTRY_CODE" --score 15 -f 5 -l 20 --sort rate --save /etc/pacman.d/mirrorlist
+    echo "--verbose --protocol https --age 24 --country $COUNTRY_CODE --score 15 --fastest 5 --latest 20 --sort rate --save /etc/pacman.d/mirrorlist" | sudo tee /etc/xdg/reflector/reflector.conf > /dev/null
+    
     sudo systemctl enable reflector.service
     sudo systemctl enable --now reflector.timer
 
