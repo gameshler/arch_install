@@ -113,21 +113,12 @@ configure_backgrounds() {
     BG_DIR="$PIC_DIR/backgrounds"
 
     # Check if the ~/Pictures directory exists
-    if [ ! -d "$PIC_DIR" ]; then
-        # If it doesn't exist, print an error message and return with a status of 1 (indicating failure)
-        printf "%b\n" "Pictures directory does not exist"
-        mkdir ~/Pictures
-        printf "%b\n" "Directory was created in Home folder"
-    fi
+    mkdir -p "$PIC_DIR"
 
     # Check if the backgrounds directory (BG_DIR) exists
     if [ ! -d "$BG_DIR" ]; then
-        # If the backgrounds directory doesn't exist, attempt to clone a repository containing backgrounds
-        if ! git clone https://github.com/ChrisTitusTech/nord-background.git "$PIC_DIR/backgrounds"; then
-            # If the git clone command fails, print an error message and return with a status of 1
-            printf "%b\n" "Failed to clone the repository"
-            return 1
-        fi
+        mkdir -p "$BG_DIR"
+        cp -r "$HOME/.local/share/dwm/backgrounds/"* "$BG_DIR"
         # Print a success message indicating that the backgrounds have been downloaded
         printf "%b\n" "Downloaded desktop backgrounds to $BG_DIR"
     else
