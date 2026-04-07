@@ -5,7 +5,7 @@
 gitpath="$HOME/.local/share/bash"
 
 installDepend() {
-    if [ ! -f "/usr/share/bash-completion/bash_completion" ] || ! command_exists bash tar bat tree unzip fc-list git multitail trash fastfetch fzf; then
+    if [ ! -f "/usr/share/bash-completion/bash_completion" ] || ! command_exists bash tar bat tree unzip fc-list git trash fastfetch fzf; then
         printf "%b\n" "Installing Bash..."
         case "$PACKAGER" in
         pacman)
