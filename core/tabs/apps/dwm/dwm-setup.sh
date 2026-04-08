@@ -20,7 +20,7 @@ setupDWM() {
     printf "%b\n" "Installing DWM..."
     case "$PACKAGER" in
     pacman)
-        sudo "$PACKAGER" -S --needed --noconfirm base-devel libx11 libxinerama libxft imlib2 libxcb git unzip flameshot nwg-look feh mate-polkit alsa-utils ghostty rofi xclip xarchiver thunar tumbler tldr gvfs thunar-archive-plugin dunst dex xscreensaver xorg-xprop xorg-xrandr xorg-xsetroot xorg-xset polybar picom xdg-user-dirs xdg-desktop-portal-gtk pipewire pavucontrol gnome-keyring flatpak networkmanager network-manager-applet noto-fonts-emoji pipewire-pulse tmux xcb-util freetype2 fontconfig libnotify rsync 
+        sudo "$PACKAGER" -S --needed --noconfirm base-devel libx11 libxinerama libxft imlib2 libxcb git unzip flameshot nwg-look feh mate-polkit alsa-utils ghostty rofi xclip xarchiver thunar tumbler tldr gvfs thunar-archive-plugin dunst dex xscreensaver xorg-xprop xorg-xrandr xorg-xsetroot xorg-xset polybar picom xdg-user-dirs xdg-desktop-portal-gtk pipewire pavucontrol gnome-keyring flatpak networkmanager network-manager-applet noto-fonts-emoji pipewire-pulse tmux
         ;;
     *)
         printf "%b\n" "Unsupported package manager: ""$PACKAGER"
@@ -113,12 +113,21 @@ configure_backgrounds() {
     BG_DIR="$PIC_DIR/backgrounds"
 
     # Check if the ~/Pictures directory exists
-    mkdir -p "$PIC_DIR"
+    if [ ! -d "$PIC_DIR" ]; then
+        # If it doesn't exist, print an error message and return with a status of 1 (indicating failure)
+        printf "%b\n" "Pictures directory does not exist"
+        mkdir ~/Pictures
+        printf "%b\n" "Directory was created in Home folder"
+    fi
 
     # Check if the backgrounds directory (BG_DIR) exists
     if [ ! -d "$BG_DIR" ]; then
-        mkdir -p "$BG_DIR"
-        cp -r "$HOME/.local/share/dwm/backgrounds/"* "$BG_DIR"
+        # If the backgrounds directory doesn't exist, attempt to clone a repository containing backgrounds
+        if ! git clone https://github.com/ChrisTitusTech/nord-background.git "$PIC_DIR/backgrounds"; then
+            # If the git clone command fails, print an error message and return with a status of 1
+            printf "%b\n" "Failed to clone the repository"
+            return 1
+        fi
         # Print a success message indicating that the backgrounds have been downloaded
         printf "%b\n" "Downloaded desktop backgrounds to $BG_DIR"
     else
@@ -126,12 +135,12 @@ configure_backgrounds() {
         printf "%b\n" "Path $BG_DIR exists for desktop backgrounds, skipping download of backgrounds"
     fi
 }
-   
+
 setupDisplayManager() {
     printf "%b\n" "Setting up Xorg"
     case "$PACKAGER" in
     pacman)
-        sudo "$PACKAGER" -S --needed --noconfirm xorg-xinit xorg-server xorg-xrandr xorg-xsetroot xorg-xset
+        sudo "$PACKAGER" -S --needed --noconfirm xorg-xinit xorg-server
         ;;
     *)
         printf "%b\n" "Unsupported package manager: $PACKAGER"
