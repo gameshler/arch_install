@@ -2,7 +2,6 @@
 
 command_exists() {
     for cmd in "$@"; do
-        export PATH="$HOME/.local/share/flatpak/exports/bin:/var/lib/flatpak/exports/bin:$PATH"
         command -v "$cmd" >/dev/null 2>&1 || return 1
     done
     return 0
