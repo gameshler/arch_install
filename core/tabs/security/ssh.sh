@@ -4,16 +4,7 @@
 
 installOpenssh() {
     if ! command_exists ssh; then
-        printf "%b\n" "Installing openssh..."
-        case "$PACKAGER" in
-        pacman)
-            sudo "$PACKAGER" -S --needed --noconfirm openssh
-            ;;
-        *)
-            printf "%b\n" "Unsupported package manager: ""$PACKAGER"
-            exit 1
-            ;;
-        esac
+        install_packages "$PACKAGER" openssh
     else
         printf "%b\n" "openssh is already installed."
     fi
@@ -21,16 +12,16 @@ installOpenssh() {
 
 generate_ssh_key() {
 
-if [ ! -f /etc/ssh/ssh_host_ed25519_key ] && \
-       [ ! -f /etc/ssh/ssh_host_rsa_key ] && \
-       [ ! -f /etc/ssh/ssh_host_ecdsa_key ]; then
+    if [ ! -f /etc/ssh/ssh_host_ed25519_key ] &&
+        [ ! -f /etc/ssh/ssh_host_rsa_key ] &&
+        [ ! -f /etc/ssh/ssh_host_ecdsa_key ]; then
         echo "Generating SSH host keys..."
-        sudo ssh-keygen -A   # generates all default host keys
+        sudo ssh-keygen -A # generates all default host keys
     fi
-    
+
     if [ ! -f ~/.ssh/id_ed25519 ]; then
         printf "%b\n" "SSH key not found, generating one..."
-       
+
         ssh-keygen -t ed25519 -C "$(whoami)@$HOSTNAME"
         eval "$(ssh-agent -s)"
 
@@ -41,8 +32,8 @@ if [ ! -f /etc/ssh/ssh_host_ed25519_key ] && \
 
 configure_ssh() {
     printf "%b\\n" "Configuring SSH server..."
-    
-    # Port 
+
+    # Port
     sudo sed -i "s/^#*Port.*/Port $SSH_PORT/" /etc/ssh/sshd_config ||
         echo "Port $SSH_PORT" | sudo tee -a /etc/ssh/sshd_config >/dev/null
 

@@ -14,16 +14,7 @@ cloneNeovim() {
 
 installNeovim() {
     if ! command_exists nvim ripgrep git fzf lua; then
-        printf "%b\n" "Installing Neovim..."
-        case "$PACKAGER" in
-        pacman)
-            sudo "$PACKAGER" -S --needed --noconfirm neovim ripgrep fzf luarocks shellcheck git lua
-            ;;
-        *)
-            printf "%b\n" "Unsupported package manager: ""$PACKAGER"
-            exit 1
-            ;;
-        esac
+        install_packages "$PACKAGER" neovim ripgrep fzf luarocks shellcheck git lua
     else
         printf "%b\n" "Neovim is already installed."
     fi

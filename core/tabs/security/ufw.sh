@@ -4,16 +4,7 @@
 
 installPkg() {
     if ! command_exists ufw; then
-        printf "%b\n" "Installing Firewall..."
-        case "$PACKAGER" in
-        pacman)
-            sudo "$PACKAGER" -S --needed --noconfirm ufw
-            ;;
-        *)
-            printf "%b\n" "Unsupported package manager: ""$PACKAGER"
-            exit 1
-            ;;
-        esac
+        install_packages "$PACKAGER" ufw
     else
         printf "%b\n" "UFW is already installed."
     fi

@@ -4,17 +4,7 @@
 
 installGhostty() {
     if ! command_exists ghostty; then
-        printf "%b\n" "Installing Ghostty..."
-        case "$PACKAGER" in
-        pacman)
-            sudo "$PACKAGER" -S --needed --noconfirm ghostty
-            ;;
-
-        *)
-            printf "%b\n" "Unsupported package manager: ${PACKAGER}"
-            exit 1
-            ;;
-        esac
+        install_packages "$PACKAGER" ghostty
     else
         printf "%b\n" "Ghostty is already installed."
     fi
@@ -29,7 +19,6 @@ setupGhosttyConfig() {
     curl -sSLo "${HOME}/.config/ghostty/config" "https://raw.githubusercontent.com/gameshler/dwm/main/config/ghostty/config"
     printf "%b\n" "Ghostty configuration files copied."
 }
-
 
 installGhostty
 setupGhosttyConfig

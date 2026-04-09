@@ -4,23 +4,14 @@
 
 installNftables() {
     if ! command_exists nft; then
-        printf "%b\n" "Installing nftables..."
-        case "$PACKAGER" in
-        pacman)
-            sudo "$PACKAGER" -S --needed --noconfirm nftables
-            ;;
-        *)
-            printf "%b\n" "Unsupported package manager: ""$PACKAGER"
-            exit 1
-            ;;
-        esac
+        install_packages "$PACKAGER" nftables
     else
         printf "%b\n" "nftables is already installed."
     fi
 }
 
 configureNftables() {
-# Detect interface used for default route
+    # Detect interface used for default route
     WAN_IF=$(ip route | awk '/^default/ {print $5; exit}')
     if [ -z "$WAN_IF" ]; then
         printf "%b\n" "Could not detect default interface, aborting nftables configuration."

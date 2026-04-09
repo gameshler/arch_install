@@ -4,16 +4,7 @@
 
 installGithubDesktop() {
     if ! command_exists github-desktop; then
-        printf "%b\n" "Installing Github Desktop..."
-        case "$PACKAGER" in
-        pacman)
-            "$helper" -S --needed --noconfirm github-desktop-bin
-            ;;
-        *)
-            printf "%b\n" "Unsupported package manager: ""$PACKAGER"
-            exit 1
-            ;;
-        esac
+        install_packages "$helper" github-desktop-bin
     else
         printf "%b\n" "Github Desktop is already installed."
     fi

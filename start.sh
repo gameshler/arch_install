@@ -3,10 +3,10 @@
 set -euo pipefail
 
 # Configuration
-REPO="gameshler/arch-gameshler"
+REPO="gameshler/archsetup"
 BRANCH="main"
-export TEMP_DIR=$(mktemp -d -t arch-gameshler-XXXXXX)
-export INSTALL_DIR="$HOME/Downloads/arch-gameshler"
+export TEMP_DIR=$(mktemp -d -t archsetup-XXXXXX)
+export INSTALL_DIR="$HOME/Downloads/archsetup"
 
 # Main
 main() {

@@ -17,16 +17,7 @@ isServiceActive() {
 }
 
 setupDWM() {
-    printf "%b\n" "Installing DWM..."
-    case "$PACKAGER" in
-    pacman)
-        sudo "$PACKAGER" -S --needed --noconfirm base-devel libx11 libxinerama libxft imlib2 libxcb git unzip flameshot nwg-look feh mate-polkit alsa-utils ghostty rofi xclip xarchiver thunar tumbler tldr gvfs thunar-archive-plugin dunst dex xscreensaver xorg-xprop xorg-xrandr xorg-xsetroot xorg-xset polybar picom xdg-user-dirs xdg-desktop-portal-gtk pipewire pavucontrol gnome-keyring flatpak networkmanager network-manager-applet noto-fonts-emoji pipewire-pulse tmux
-        ;;
-    *)
-        printf "%b\n" "Unsupported package manager: ""$PACKAGER"
-        exit 1
-        ;;
-    esac
+    install_packages "$PACKAGER" base-devel libx11 libxinerama libxft imlib2 libxcb git unzip flameshot nwg-look feh mate-polkit alsa-utils ghostty rofi xclip xarchiver thunar tumbler tldr gvfs thunar-archive-plugin dunst dex xscreensaver xorg-xprop xorg-xrandr xorg-xsetroot xorg-xset polybar picom xdg-user-dirs xdg-desktop-portal-gtk pipewire pavucontrol gnome-keyring flatpak networkmanager network-manager-applet noto-fonts-emoji pipewire-pulse tmux
 }
 
 makeDWM() {
@@ -89,7 +80,7 @@ clone_config_folders() {
         fc-cache -fv
         printf "%b\n" "Polybar icon fonts installed"
     fi
-    
+
     # Iterate over all directories in config/*
     for dir in config/*/; do
         # Extract the directory name
@@ -138,15 +129,7 @@ configure_backgrounds() {
 
 setupDisplayManager() {
     printf "%b\n" "Setting up Xorg"
-    case "$PACKAGER" in
-    pacman)
-        sudo "$PACKAGER" -S --needed --noconfirm xorg-xinit xorg-server
-        ;;
-    *)
-        printf "%b\n" "Unsupported package manager: $PACKAGER"
-        exit 1
-        ;;
-    esac
+    install_packages "$PACKAGER" xorg-xinit xorg-server
     printf "%b\n" "Xorg installed successfully"
     printf "%b\n" "Setting up Display Manager"
     currentdm="none"

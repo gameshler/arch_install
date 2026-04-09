@@ -5,7 +5,7 @@
 installQEMUDesktop() {
     if ! command_exists qemu-img; then
         printf "%b\n" "Installing QEMU."
-        sudo "$PACKAGER" -S --needed --noconfirm qemu-desktop
+        install_packages "$PACKAGER" qemu-desktop
     else
         printf "%b\n" "QEMU is already installed."
     fi
@@ -15,7 +15,7 @@ installQEMUDesktop() {
 installQEMUEmulators() {
     if ! "$PACKAGER" -Q | grep -q "qemu-emulators-full "; then
         printf "%b\n" "Installing QEMU-Emulators."
-        sudo "$PACKAGER" -S --needed --noconfirm qemu-emulators-full swtpm
+        install_packages "$PACKAGER" qemu-emulators-full swtpm
     else
         printf "%b\n" "QEMU-Emulators already installed."
     fi
@@ -24,7 +24,7 @@ installQEMUEmulators() {
 installVirtManager() {
     if ! command_exists virt-manager; then
         printf "%b\n" "Installing Virt-Manager."
-        sudo "$PACKAGER" -S --needed --noconfirm virt-manager
+        install_packages "$PACKAGER" virt-manager
     else
         printf "%b\n" "Virt-Manager already installed."
     fi
@@ -41,7 +41,7 @@ checkKVM() {
 setupLibvirt() {
     printf "%b\n" "Configuring Libvirt."
 
-    sudo "$PACKAGER" -S --needed --noconfirm dnsmasq
+    install_packages "$PACKAGER" dnsmasq
     sudo sed -i 's/^#\?firewall_backend\s*=\s*".*"/firewall_backend = "nftables"/' "/etc/libvirt/network.conf"
 
     if systemctl is-active --quiet polkit; then
@@ -58,9 +58,9 @@ setupLibvirt() {
     done
 
     sudo sed -i -E \
-    -e 's/^(\s*)#\s*(unix_sock_group = "libvirt")/\1\2/' \
-    -e 's/^(\s*)#\s*(unix_sock_rw_perms = "0770")/\1\2/' \
-    /etc/libvirt/libvirtd.conf
+        -e 's/^(\s*)#\s*(unix_sock_group = "libvirt")/\1\2/' \
+        -e 's/^(\s*)#\s*(unix_sock_rw_perms = "0770")/\1\2/' \
+        /etc/libvirt/libvirtd.conf
 
     sudo systemctl enable --now libvirtd.service
     sudo virsh net-autostart default
@@ -70,7 +70,7 @@ setupLibvirt() {
 
 installLibvirt() {
     if ! command_exists libvirtd; then
-        sudo "$PACKAGER" -S --needed --noconfirm libvirt dmidecode
+        install_packages "$PACKAGER" libvirt dmidecode
     else
         printf "%b\n" "Libvirt is already installed."
     fi
