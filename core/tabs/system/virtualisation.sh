@@ -5,7 +5,7 @@
 installQEMUDesktop() {
     if ! command_exists qemu-img; then
         printf "%b\n" "Installing QEMU."
-        install_packages "$PACKAGER" qemu-desktop
+        install_packages qemu-desktop
     else
         printf "%b\n" "QEMU is already installed."
     fi
@@ -15,7 +15,7 @@ installQEMUDesktop() {
 installQEMUEmulators() {
     if ! "$PACKAGER" -Q | grep -q "qemu-emulators-full "; then
         printf "%b\n" "Installing QEMU-Emulators."
-        install_packages "$PACKAGER" qemu-emulators-full swtpm
+        install_packages qemu-emulators-full swtpm
     else
         printf "%b\n" "QEMU-Emulators already installed."
     fi
@@ -24,7 +24,7 @@ installQEMUEmulators() {
 installVirtManager() {
     if ! command_exists virt-manager; then
         printf "%b\n" "Installing Virt-Manager."
-        install_packages "$PACKAGER" virt-manager
+        install_packages virt-manager
     else
         printf "%b\n" "Virt-Manager already installed."
     fi
@@ -41,7 +41,7 @@ checkKVM() {
 setupLibvirt() {
     printf "%b\n" "Configuring Libvirt."
 
-    install_packages "$PACKAGER" dnsmasq
+    install_packages dnsmasq
     sudo sed -i 's/^#\?firewall_backend\s*=\s*".*"/firewall_backend = "nftables"/' "/etc/libvirt/network.conf"
 
     if systemctl is-active --quiet polkit; then
@@ -70,7 +70,7 @@ setupLibvirt() {
 
 installLibvirt() {
     if ! command_exists libvirtd; then
-        install_packages "$PACKAGER" libvirt dmidecode
+        install_packages libvirt dmidecode
     else
         printf "%b\n" "Libvirt is already installed."
     fi

@@ -4,7 +4,7 @@
 
 installFirefox() {
     if ! command_exists firefox; then
-        install_packages "$PACKAGER" firefox
+        install_packages firefox
     else
         printf "%b\n" "Firefox Browser is already installed."
     fi

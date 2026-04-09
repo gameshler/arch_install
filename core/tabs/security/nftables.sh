@@ -4,7 +4,7 @@
 
 installNftables() {
     if ! command_exists nft; then
-        install_packages "$PACKAGER" nftables
+        install_packages nftables
     else
         printf "%b\n" "nftables is already installed."
     fi

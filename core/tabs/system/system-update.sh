@@ -3,24 +3,26 @@
 . "$COMMON_SCRIPT"
 
 fastUpdate() {
-        install_packages yay rate-mirrors-bin
 
-        printf "%b\n" "Generating a new list of mirrors using rate-mirrors. This process may take a few seconds..."
+    install_packages --aur rate-mirrors-bin
 
-        if [ -s "/etc/pacman.d/mirrorlist" ]; then
-            sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
-        fi
+    printf "%b\n" "Generating a new list of mirrors using rate-mirrors. This process may take a few seconds..."
 
-        dtype_local="${DTYPE:-arch}"
-        echo "Using rate-mirrors with distro: $dtype_local"
+    if [ -s "/etc/pacman.d/mirrorlist" ]; then
+        sudo cp /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.bak
+    fi
 
-        if ! sudo rate-mirrors --top-mirrors-number-to-retest=5 --disable-comments --save /etc/pacman.d/mirrorlist --allow-root "$dtype_local" >/dev/null || [ ! -s "/etc/pacman.d/mirrorlist" ]; then
-            printf "%b\n" "Rate-mirrors failed, restoring backup."
-            sudo cp /etc/pacman.d/mirrorlist.bak /etc/pacman.d/mirrorlist
+    dtype_local="${DTYPE:-arch}"
+    echo "Using rate-mirrors with distro: $dtype_local"
 
-            printf "%b\n" "Rate-mirrors failed, restoring backup."
-            sudo cp /etc/pacman.d/mirrorlist.bak /etc/pacman.d/mirrorlist
-        fi
+    if ! sudo rate-mirrors --top-mirrors-number-to-retest=5 --disable-comments --save /etc/pacman.d/mirrorlist --allow-root "$dtype_local" >/dev/null || [ ! -s "/etc/pacman.d/mirrorlist" ]; then
+        printf "%b\n" "Rate-mirrors failed, restoring backup."
+        sudo cp /etc/pacman.d/mirrorlist.bak /etc/pacman.d/mirrorlist
+
+        printf "%b\n" "Rate-mirrors failed, restoring backup."
+        sudo cp /etc/pacman.d/mirrorlist.bak /etc/pacman.d/mirrorlist
+    fi
+
 }
 
 updateSystem() {
@@ -28,7 +30,7 @@ updateSystem() {
     case "$PACKAGER" in
     pacman)
         sudo "$PACKAGER" -Sy --noconfirm --needed archlinux-keyring
-        "$helper" -Su --noconfirm
+        "$HELPER" -Su --noconfirm
         ;;
     *)
         printf "%b\n" "Unsupported package manager: ${PACKAGER}"
@@ -43,8 +45,6 @@ updateFlatpaks() {
         flatpak update -y
     fi
 }
-checkAurHelper
 fastUpdate
 updateSystem
 updateFlatpaks
-

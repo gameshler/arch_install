@@ -11,8 +11,6 @@ export INSTALL_DIR="$HOME/Downloads/archsetup"
 # Main
 main() {
 
-    echo -e "Downloading repository..."
-
     # Download and extract repository
     if ! curl -fsSL "https://github.com/$REPO/archive/$BRANCH.tar.gz" |
         tar -xz -C "$TEMP_DIR"; then
@@ -39,8 +37,6 @@ main() {
     # Verify and run main script
     MAIN_SCRIPT="$INSTALL_DIR/core/main.sh"
     if [[ -f "$MAIN_SCRIPT" ]]; then
-        echo -e "Make sure to run setup.sh first"
-        echo -e "Starting installation..."
         "$MAIN_SCRIPT"
     else
         echo -e "Main script not found at $MAIN_SCRIPT"

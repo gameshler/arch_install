@@ -4,7 +4,7 @@
 
 installDiscord() {
     if ! command_exists com.discordapp.Discord && ! command_exists discord; then
-        install_packages "$PACKAGER" discord
+        install_packages discord
     else
         printf "%b\n" "Discord is already installed."
     fi

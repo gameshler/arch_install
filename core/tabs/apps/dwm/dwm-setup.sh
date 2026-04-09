@@ -17,7 +17,12 @@ isServiceActive() {
 }
 
 setupDWM() {
-    install_packages "$PACKAGER" base-devel libx11 libxinerama libxft imlib2 libxcb git unzip flameshot nwg-look feh mate-polkit alsa-utils ghostty rofi xclip xarchiver thunar tumbler tldr gvfs thunar-archive-plugin dunst dex xscreensaver xorg-xprop xorg-xrandr xorg-xsetroot xorg-xset polybar picom xdg-user-dirs xdg-desktop-portal-gtk pipewire pavucontrol gnome-keyring flatpak networkmanager network-manager-applet noto-fonts-emoji pipewire-pulse tmux
+    install_packages \
+        base-devel libx11 libxinerama libxft imlib2 libxcb git unzip flameshot nwg-look \
+        feh mate-polkit alsa-utils ghostty rofi xclip xarchiver thunar tumbler tldr gvfs \
+        thunar-archive-plugin dunst dex xscreensaver xorg-xprop xorg-xrandr xorg-xsetroot \
+        xorg-xset polybar picom xdg-user-dirs xdg-desktop-portal-gtk pipewire pavucontrol \
+        gnome-keyring flatpak networkmanager network-manager-applet noto-fonts-emoji pipewire-pulse tmux
 }
 
 makeDWM() {
@@ -129,7 +134,7 @@ configure_backgrounds() {
 
 setupDisplayManager() {
     printf "%b\n" "Setting up Xorg"
-    install_packages "$PACKAGER" xorg-xinit xorg-server
+    install_packages xorg-xinit xorg-server
     printf "%b\n" "Xorg installed successfully"
     printf "%b\n" "Setting up Display Manager"
     currentdm="none"
@@ -143,20 +148,12 @@ setupDisplayManager() {
     if [ "$currentdm" = "none" ]; then
         printf "%b\n" "--------------------------"
         DM="sddm"
-        case "$PACKAGER" in
-        pacman)
-            sudo "$PACKAGER" -S --needed --noconfirm "$DM"
-            if [ "$DM" = "lightdm" ]; then
-                sudo "$PACKAGER" -S --needed --noconfirm lightdm-gtk-greeter
-            elif [ "$DM" = "sddm" ]; then
-                sh -c "$(curl -fsSL https://raw.githubusercontent.com/keyitdev/sddm-astronaut-theme/master/setup.sh)"
-            fi
-            ;;
-        *)
-            printf "%b\n" "Unsupported package manager: $PACKAGER"
-            exit 1
-            ;;
-        esac
+        install_packages "$DM"
+        if [ "$DM" = "lightdm" ]; then
+            install_packages lightdm-gtk-greeter
+        elif [ "$DM" = "sddm" ]; then
+            sh -c "$(curl -fsSL https://raw.githubusercontent.com/keyitdev/sddm-astronaut-theme/master/setup.sh)"
+        fi
         printf "%b\n" "$DM installed successfully"
         enableService "$DM"
 

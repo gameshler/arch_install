@@ -4,7 +4,7 @@
 
 installPkg() {
     if ! command_exists ufw; then
-        install_packages "$PACKAGER" ufw
+        install_packages ufw
     else
         printf "%b\n" "UFW is already installed."
     fi

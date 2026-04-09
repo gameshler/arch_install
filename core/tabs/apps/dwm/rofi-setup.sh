@@ -4,7 +4,7 @@
 
 installRofi() {
     if ! command_exists rofi; then
-        install_packages "$PACKAGER" rofi
+        install_packages rofi
     else
         printf "%b\n" "Rofi is already installed."
     fi

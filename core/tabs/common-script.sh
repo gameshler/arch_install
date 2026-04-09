@@ -1,7 +1,8 @@
-#!/bin/sh -e
+#!/usr/bin/env bash
 
 command_exists() {
     for cmd in "$@"; do
+        export PATH="$HOME/.local/share/flatpak/exports/bin:/var/lib/flatpak/exports/bin:$PATH"
         command -v "$cmd" >/dev/null 2>&1 || return 1
     done
     return 0
@@ -10,9 +11,9 @@ command_exists() {
 checkPackageManager() {
     local managers=("$@")
     for pgm in "${managers[@]}"; do
-        if command_exists "$pgm"; then
-            declare -g PACKAGER="$pgm"
-            printf "%b\n" "Using $pgm as package manager"
+        if command_exists "${pgm}"; then
+            PACKAGER=${pgm}
+            printf "%b\n" "Using ${pgm} as package manager"
             return
         fi
     done
@@ -20,21 +21,29 @@ checkPackageManager() {
     exit 1
 }
 checkAurHelper() {
-    if [[ "$PACKAGER" == "pacman" ]]; then
-        export helper="yay"
-        if command_exists "$helper"; then
-            printf "%b\n" "Using $helper as AUR helper"
+    local helpers=("yay paru")
+
+    for h in "${helpers[@]}"; do
+        if command_exists "${h}"; then
+            HELPER="${h}"
+            printf "%b\n" "Using ${h} as Aur Helper"
             return
         fi
-        printf "%b\n" "Installing AUR helper: $helper"
-        mkdir -p "$HOME"/opt && cd "$HOME"/opt || exit
-        if [[ ! -d yay-bin ]]; then
-            git clone https://aur.archlinux.org/yay-bin.git
-        fi
-        sudo chown -R "$USER":"$USER" ./yay-bin
-        cd yay-bin && makepkg --noconfirm -si
+    done
+
+    printf "%b\n" "No AUR helper found. Installing yay..."
+
+    sudo "$PACKAGER" -S --needed --noconfirm base-devel git
+
+    mkdir -p "$HOME/opt" && cd "$HOME/opt" || exit
+    if [[ ! -d yay-bin ]]; then
+        git clone https://aur.archlinux.org/yay-bin.git
     fi
+    sudo chown -R "$USER":"$USER" ./yay-bin
+    cd yay-bin && makepkg --noconfirm -si
+
 }
+
 checkFlatpak() {
     if ! command_exists flatpak; then
         printf "%b\n" "Installing Flatpak..."
@@ -61,42 +70,36 @@ checkFlatpak() {
 }
 
 install_packages() {
-    local pkg_tool="$1"
-    shift
+    local source=""
 
-    if ! command_exists "$pkg_tool"; then
-        printf "%b\n" "Error: Package manager '$pkg_tool' not found"
-        return 1
-    fi
+    # Detect if first arg is a source flag
+    case "$1" in
+    --official | --aur | --flatpak)
+        source="$1"
+        shift
+        ;;
+    esac
 
-    local packages=("$@")
+    # Default to official if not specified
+    source="${source:---official}"
 
-    case "$pkg_tool" in
-        pacman)
-            local to_install=()
-            for pkg in "${packages[@]}"; do
-                if ! pacman -Q "$pkg" &>/dev/null; then
-                    to_install+=("$pkg")
-                fi
-            done
+    case "$source" in
+    --official)
+        sudo pacman -S --needed --noconfirm "$@"
+        ;;
+    --aur)
+        checkAurHelper
+        "$HELPER" -S --needed --noconfirm "$@"
+        ;;
+    --flatpak)
+        checkFlatpak
+        flatpak install -y flathub "$@"
+        ;;
+    *)
+        printf "%b\n" "Unsupported package manager: ""$source"
+        exit 1
 
-            if [[ ${#to_install[@]} -gt 0 ]]; then
-                printf "%b\n" "Installing with pacman: ${to_install[*]}"
-                sudo pacman -S --needed --noconfirm "${to_install[@]}"
-            else
-                printf "%b\n" "All packages already installed (pacman)"
-            fi
-            ;;
-        
-        yay)
-            printf "%b\n" "Installing with yay: ${packages[*]}"
-            yay -S --needed --noconfirm "${packages[@]}"
-            ;;
-        
-        *)
-            printf "%b\n" "Unsupported package manager: $pkg_tool"
-            return 1
-            ;;
+        ;;
     esac
 }
 
@@ -116,8 +119,5 @@ check_init_manager() {
     exit 1
 }
 
-
 checkPackageManager "pacman"
 check_init_manager 'systemctl rc-service sv'
-
-

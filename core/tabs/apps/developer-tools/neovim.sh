@@ -14,7 +14,7 @@ cloneNeovim() {
 
 installNeovim() {
     if ! command_exists nvim ripgrep git fzf lua; then
-        install_packages "$PACKAGER" neovim ripgrep fzf luarocks shellcheck git lua
+        install_packages neovim ripgrep fzf luarocks shellcheck git lua
     else
         printf "%b\n" "Neovim is already installed."
     fi

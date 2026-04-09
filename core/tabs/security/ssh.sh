@@ -4,7 +4,7 @@
 
 installOpenssh() {
     if ! command_exists ssh; then
-        install_packages "$PACKAGER" openssh
+        install_packages openssh
     else
         printf "%b\n" "openssh is already installed."
     fi

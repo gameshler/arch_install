@@ -4,7 +4,7 @@
 
 installGhostty() {
     if ! command_exists ghostty; then
-        install_packages "$PACKAGER" ghostty
+        install_packages ghostty
     else
         printf "%b\n" "Ghostty is already installed."
     fi
