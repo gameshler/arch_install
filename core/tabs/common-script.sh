@@ -19,10 +19,9 @@ checkPackageManager() {
     echo "No supported package manager found" >&2
     exit 1
 }
-
 checkAurHelper() {
     if [[ "$PACKAGER" == "pacman" ]]; then
-        declare -g helper="yay"
+        export helper="yay"
         if command_exists "$helper"; then
             printf "%b\n" "Using $helper as AUR helper"
             return

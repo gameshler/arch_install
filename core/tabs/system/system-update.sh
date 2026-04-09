@@ -3,9 +3,7 @@
 . "$COMMON_SCRIPT"
 
 fastUpdate() {
-    case "$PACKAGER" in
-    pacman)
-        install_packages "$helper" rate-mirrors-bin
+        install_packages "yay" rate-mirrors-bin
 
         printf "%b\n" "Generating a new list of mirrors using rate-mirrors. This process may take a few seconds..."
 
@@ -23,12 +21,6 @@ fastUpdate() {
             printf "%b\n" "Rate-mirrors failed, restoring backup."
             sudo cp /etc/pacman.d/mirrorlist.bak /etc/pacman.d/mirrorlist
         fi
-        ;;
-    *)
-        printf "%b\n" "Unsupported package manager: ${PACKAGER}"
-        exit 1
-        ;;
-    esac
 }
 
 updateSystem() {
