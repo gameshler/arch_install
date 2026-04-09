@@ -70,24 +70,34 @@ install_packages() {
     fi
 
     local packages=("$@")
-    local to_install=()
 
-    for pkg in "${packages[@]}"; do
-        if ! "$pkg_tool" -Q "$pkg" &>/dev/null; then
-            to_install+=("$pkg")
-        fi
-    done
+    case "$pkg_tool" in
+        pacman)
+            local to_install=()
+            for pkg in "${packages[@]}"; do
+                if ! pacman -Q "$pkg" &>/dev/null; then
+                    to_install+=("$pkg")
+                fi
+            done
 
-    if [[ ${#to_install[@]} -gt 0 ]]; then
-        printf "%b\n" "Installing packages with $pkg_tool: ${to_install[*]}"
-        if [[ "$pkg_tool" == "pacman" ]]; then
-            sudo "$pkg_tool" -S --needed --noconfirm "${to_install[@]}"
-        else
-            "$pkg_tool" -S --needed --noconfirm "${to_install[@]}"
-        fi
-    else
-        printf "%b\n" "All packages already installed for $pkg_tool"
-    fi
+            if [[ ${#to_install[@]} -gt 0 ]]; then
+                printf "%b\n" "Installing with pacman: ${to_install[*]}"
+                sudo pacman -S --needed --noconfirm "${to_install[@]}"
+            else
+                printf "%b\n" "All packages already installed (pacman)"
+            fi
+            ;;
+        
+        yay)
+            printf "%b\n" "Installing with yay: ${packages[*]}"
+            yay -S --needed --noconfirm "${packages[@]}"
+            ;;
+        
+        *)
+            printf "%b\n" "Unsupported package manager: $pkg_tool"
+            return 1
+            ;;
+    esac
 }
 
 check_init_manager() {
