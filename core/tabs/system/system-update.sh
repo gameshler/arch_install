@@ -3,7 +3,7 @@
 . "$COMMON_SCRIPT"
 
 fastUpdate() {
-        install_packages "yay" rate-mirrors-bin
+        install_packages rate-mirrors-bin
 
         printf "%b\n" "Generating a new list of mirrors using rate-mirrors. This process may take a few seconds..."
 
