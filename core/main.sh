@@ -71,6 +71,7 @@ choose_directory() {
         elif ((choice == ${#options[@]} + 1)); then
             if [[ "${#parent_stack[@]}" -eq 0 ]]; then
                 echo -e "Exiting."
+                clear
                 exit 0
             else
                 current_dir="${parent_stack[-1]}"
