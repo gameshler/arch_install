@@ -139,7 +139,7 @@ setupDisplayManager() {
     printf "%b\n" "Setting up Display Manager"
     currentdm="none"
     for dm in gdm sddm lightdm; do
-        if command -v "$dm" >/dev/null 2>&1 || isServiceActive "$dm"; then
+        if command_exists "$dm" || isServiceActive "$dm"; then
             currentdm="$dm"
             break
         fi
