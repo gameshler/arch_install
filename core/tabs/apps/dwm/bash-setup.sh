@@ -5,8 +5,8 @@
 gitpath="$HOME/.local/share/bash"
 
 installDepend() {
-    if [ ! -f "/usr/share/bash-completion/bash_completion" ] || ! command_exists bash tar bat tree unzip fc-list git multitail trash fastfetch fzf; then
-        install_packages bash bash-completion tar bat tree unzip fontconfig git fzf multitail trash-cli fastfetch
+    if [ ! -f "/usr/share/bash-completion/bash_completion" ] || ! command_exists bash tar bat tree unzip fc-list git; then
+        install_packages bash bash-completion tar bat tree unzip fontconfig git fzf  
     fi
 }
 

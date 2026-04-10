@@ -12,12 +12,8 @@ pause() {
     read -rp $'\nPress Enter to return...'
 }
 cleanup() {
-    echo -e "Cleaning up temporary files..."
     rm -rf "$TEMP_DIR"
-    read -rp "Delete installation files in $INSTALL_DIR? [y/N] " choice
-    if [[ "$choice" =~ ^[Yy] ]]; then
-        rm -rf "$INSTALL_DIR"
-    fi
+    rm -rf "$INSTALL_DIR"
 }
 choose_directory() {
     local current_dir="$TABS_DIR"
