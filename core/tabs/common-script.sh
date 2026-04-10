@@ -20,7 +20,7 @@ checkPackageManager() {
     exit 1
 }
 checkAurHelper() {
-    local helpers=("yay paru")
+    local helpers=("yay" "paru")
 
     for h in "${helpers[@]}"; do
         if command_exists "${h}"; then
