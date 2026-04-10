@@ -30,20 +30,25 @@ checkAurHelper() {
         fi
     done
 
+    printf "%b\n" "No AUR helper found. Installing yay..."
+
+    sudo "$PACKAGER" -S --needed --noconfirm base-devel git || exit 1
+    mkdir -p "$HOME/opt" || exit 1
+    cd "$HOME/opt" || exit 1
+
+    if [[ ! -d yay-bin ]]; then
+        git clone https://aur.archlinux.org/yay-bin.git || exit 1
+    fi
+    sudo chown -R "$USER":"$USER" ./yay-bin
+    cd yay-bin || exit 1
+    makepkg --noconfirm -si || exit 1
+
     if command_exists yay; then
         HELPER="yay"
+        printf "%b\n" "$HELPER installed and set as AUR helper"
     else
-        printf "%b\n" "No AUR helper found. Installing yay..."
-
-        sudo "$PACKAGER" -S --needed --noconfirm base-devel git
-
-        mkdir -p "$HOME/opt" && cd "$HOME/opt" || return 1
-        if [[ ! -d yay-bin ]]; then
-            git clone https://aur.archlinux.org/yay-bin.git || return 1
-        fi
-        sudo chown -R "$USER":"$USER" ./yay-bin
-        cd yay-bin && makepkg --noconfirm -si
-
+        printf "%b\n" "Failed to install $HELPER" >&2
+        exit 1
     fi
 
 }
