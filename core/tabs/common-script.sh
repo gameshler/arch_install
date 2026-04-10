@@ -20,9 +20,6 @@ checkPackageManager() {
     exit 1
 }
 checkAurHelper() {
-    if [[ -n "$HELPER" ]] && command_exists "$HELPER"; then
-        return 0
-    fi
     local helpers=("yay paru")
 
     for h in "${helpers[@]}"; do
