@@ -34,12 +34,19 @@ checkAurHelper() {
 
     sudo "$PACKAGER" -S --needed --noconfirm base-devel git
 
-    mkdir -p "$HOME/opt" && cd "$HOME/opt" || exit
+    mkdir -p "$HOME/opt" && cd "$HOME/opt" || return 1
     if [[ ! -d yay-bin ]]; then
-        git clone https://aur.archlinux.org/yay-bin.git
+        git clone https://aur.archlinux.org/yay-bin.git || return 1
     fi
     sudo chown -R "$USER":"$USER" ./yay-bin
     cd yay-bin && makepkg --noconfirm -si
+
+    if command_exists yay; then
+        HELPER="yay"
+    else
+        echo "Failed to install yay"
+        return 1
+    fi
 
 }
 
