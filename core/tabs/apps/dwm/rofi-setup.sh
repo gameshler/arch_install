@@ -28,7 +28,6 @@ setupRofiConfig() {
     curl -sSLo "$HOME/.config/rofi/config.rasi" https://github.com/gameshler/dwm/raw/main/config/rofi/config.rasi
     mkdir -p "$HOME/.config/rofi/themes"
     curl -sSLo "$HOME/.config/rofi/themes/nord.rasi" https://github.com/gameshler/dwm/raw/main/config/rofi/themes/nord.rasi
-    curl -sSLo "$HOME/.config/rofi/themes/powermenu.rasi" https://github.com/gameshler/dwm/raw/main/config/rofi/themes/powermenu.rasi
 
 }
 
