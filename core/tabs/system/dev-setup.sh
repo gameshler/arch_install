@@ -22,7 +22,6 @@ installPkgs() {
 
 main() {
     installPkgs
-    install_packages --aur postman-bin mongodb-compass
     printf "%b\n" "Installing Node.js v25 via nvm"
     nvm install 25
     nvm alias default 25
