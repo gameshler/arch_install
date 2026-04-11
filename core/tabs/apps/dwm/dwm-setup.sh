@@ -80,8 +80,8 @@ clone_config_folders() {
 
     FONT_DIR="$HOME/.local/share/fonts"
     mkdir -p "$FONT_DIR"
-    if [ -d "$HOME/.local/share/dwm/polybar/fonts" ]; then
-        cp -r "$HOME/.local/share/dwm/polybar/fonts/"* "$FONT_DIR/"
+    if [ -d "$HOME/.local/share/dwm/config/polybar/fonts" ]; then
+        cp -r "$HOME/.local/share/dwm/config/polybar/fonts/"* "$FONT_DIR/"
         fc-cache -fv
         printf "%b\n" "Polybar icon fonts installed"
     fi
