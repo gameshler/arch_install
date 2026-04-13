@@ -2,15 +2,17 @@
 
 . "$COMMON_SCRIPT"
 
-installNftables() {
+install_nftables() {
     if ! command_exists nft; then
+        printf "%b\n" "Installing NFTables..."
+
         install_packages nftables
     else
         printf "%b\n" "nftables is already installed."
     fi
 }
 
-configureNftables() {
+configure_nftables() {
     # Detect interface used for default route
     WAN_IF=$(ip route | awk '/^default/ {print $5; exit}')
     if [ -z "$WAN_IF" ]; then
@@ -99,6 +101,5 @@ EOF
     sysctl --system
 '
 }
-
-installNftables
-configureNftables
+install_nftables
+configure_nftables

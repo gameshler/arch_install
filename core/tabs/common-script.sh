@@ -7,7 +7,7 @@ command_exists() {
     return 0
 }
 
-checkPackageManager() {
+check_package_manager() {
     local managers=("$@")
     for pgm in "${managers[@]}"; do
         if command_exists "${pgm}"; then
@@ -19,7 +19,7 @@ checkPackageManager() {
     echo "No supported package manager found" >&2
     exit 1
 }
-checkAurHelper() {
+check_aur_helper() {
     local helpers=("yay" "paru")
 
     for h in "${helpers[@]}"; do
@@ -53,7 +53,7 @@ checkAurHelper() {
 
 }
 
-checkFlatpak() {
+check_flatpak() {
     if ! command_exists flatpak; then
         printf "%b\n" "Installing Flatpak..."
         case "$PACKAGER" in
@@ -97,11 +97,11 @@ install_packages() {
         sudo pacman -S --needed --noconfirm "$@"
         ;;
     --aur)
-        checkAurHelper
+        check_aur_helper
         "$HELPER" -S --needed --noconfirm "$@"
         ;;
     --flatpak)
-        checkFlatpak
+        check_flatpak
         flatpak install -y flathub "$@"
         ;;
     *)
@@ -128,5 +128,19 @@ check_init_manager() {
     exit 1
 }
 
-checkPackageManager "pacman"
+is_service_active() {
+    case "$INIT_MANAGER" in
+    systemctl)
+        sudo "$INIT_MANAGER" is-active --quiet "$1"
+        ;;
+    rc-service)
+        sudo "$INIT_MANAGER" "$1" status --quiet
+        ;;
+    sv)
+        sudo "$INIT_MANAGER" status "$1" >/dev/null 2>&1
+        ;;
+    esac
+}
+
+check_package_manager "pacman"
 check_init_manager 'systemctl rc-service sv'

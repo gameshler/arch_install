@@ -2,12 +2,13 @@
 
 . "$COMMON_SCRIPT"
 
-installFirefox() {
+install_firefox() {
     if ! command_exists firefox; then
+        printf "%b\n" "Installing Firefox..."
+
         install_packages firefox
     else
         printf "%b\n" "Firefox Browser is already installed."
     fi
 }
-
-installFirefox
+install_firefox

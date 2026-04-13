@@ -2,8 +2,10 @@
 
 . "$COMMON_SCRIPT"
 
-installOpenssh() {
+install_openssh() {
     if ! command_exists ssh; then
+        printf "%b\n" "Installing OpenSSH..."
+
         install_packages openssh
     else
         printf "%b\n" "openssh is already installed."
@@ -63,7 +65,6 @@ configure_ssh() {
     }
     printf "%b\\n" "SSH configured successfully."
 }
-
-installOpenssh
+install_openssh
 generate_ssh_key
 configure_ssh

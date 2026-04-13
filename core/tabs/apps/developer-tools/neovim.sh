@@ -2,7 +2,7 @@
 
 . "$COMMON_SCRIPT"
 
-cloneNeovim() {
+clone_neovim() {
     if [ -z "${TEMP_DIR:-}" ] || [ ! -d "$TEMP_DIR" ]; then
         printf "Missing or Invalid Temp Directory\n" >&2
         exit 1
@@ -12,15 +12,17 @@ cloneNeovim() {
 
 }
 
-installNeovim() {
+install_neovim() {
     if ! command_exists nvim ripgrep git fzf lua; then
+        printf "%b\n" "Installing Neovim..."
+
         install_packages neovim ripgrep fzf luarocks shellcheck git lua
     else
         printf "%b\n" "Neovim is already installed."
     fi
 }
 
-linkNeovimConfig() {
+link_neovim_config() {
     printf "Linking Neovim Configuration Files..."
     mkdir -p "$HOME/.config/nvim"
     cp -r "$TEMP_DIR/neovim/lua" "$HOME/.config/nvim/"
@@ -28,7 +30,6 @@ linkNeovimConfig() {
     cp -r "$TEMP_DIR/neovim/lazy-lock.json" "$HOME/.config/nvim/"
 
 }
-
-installNeovim
-cloneNeovim
-linkNeovimConfig
+install_neovim
+clone_neovim
+link_neovim_config

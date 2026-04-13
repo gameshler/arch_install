@@ -2,7 +2,8 @@
 
 . "$COMMON_SCRIPT"
 
-fastUpdate() {
+fast_update() {
+    printf "%b\n" "Installing Rate Mirrors..."
 
     install_packages --aur rate-mirrors-bin
 
@@ -25,7 +26,7 @@ fastUpdate() {
 
 }
 
-updateSystem() {
+update_system() {
     printf "%b\n" "Updating system packages."
     case "$PACKAGER" in
     pacman)
@@ -39,12 +40,12 @@ updateSystem() {
     esac
 }
 
-updateFlatpaks() {
+update_flatpaks() {
     if command_exists flatpak; then
         printf "%b\n" "Updating flatpak packages."
         flatpak update -y
     fi
 }
-fastUpdate
-updateSystem
-updateFlatpaks
+fast_update
+update_system
+update_flatpaks

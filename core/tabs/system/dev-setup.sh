@@ -2,7 +2,7 @@
 
 . "$COMMON_SCRIPT"
 
-installPkgs() {
+install_pkgs() {
     if ! command_exists nvm pnpm; then
         printf "%b\n" "Installing Packages..."
 
@@ -21,7 +21,7 @@ installPkgs() {
 }
 
 main() {
-    installPkgs
+    install_pkgs
     printf "%b\n" "Installing Node.js v25 via nvm"
     nvm install 25
     nvm alias default 25

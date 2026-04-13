@@ -4,13 +4,13 @@
 
 gitpath="$HOME/.local/share/bash"
 
-installDepend() {
+install_depend() {
     if [ ! -f "/usr/share/bash-completion/bash_completion" ] || ! command_exists bash tar bat tree unzip fc-list git; then
-        install_packages bash bash-completion tar bat tree unzip fontconfig git fzf  
+        install_packages bash bash-completion tar bat tree unzip fontconfig git fzf
     fi
 }
 
-setupBash() {
+setup_bash() {
     if [ -d "$gitpath" ]; then
         rm -rf "$gitpath"
     fi
@@ -28,7 +28,7 @@ setupBash() {
     done
 }
 
-installFont() {
+install_font() {
     # Check to see if the FiraCode Nerd Font is installed (Change this to whatever font you would like)
     FONT_NAME="FiraCode Nerd Font"
     if fc-list :family | grep -iq "$FONT_NAME"; then
@@ -47,7 +47,7 @@ installFont() {
     fi
 }
 
-installStarshipAndFzf() {
+install_starship_fzf() {
     if command_exists starship; then
         printf "%b\n" "Starship already installed"
         return
@@ -67,7 +67,7 @@ installStarshipAndFzf() {
     fi
 }
 
-linkConfig() {
+link_config() {
     OLD_BASHRC="$HOME/.bashrc"
     if [ -e "$OLD_BASHRC" ] && [ ! -e "$HOME/.bashrc.bak" ]; then
         printf "%b\n" "Moving old bash config file to $HOME/.bashrc.bak"
@@ -91,8 +91,8 @@ linkConfig() {
     printf "%b\n" "Done! restart your shell to see the changes."
 }
 
-installDepend
-setupBash
-installFont
-installStarshipAndFzf
-linkConfig
+install_depend
+setup_bash
+install_font
+install_starship_fzf
+link_config

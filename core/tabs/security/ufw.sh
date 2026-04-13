@@ -2,15 +2,17 @@
 
 . "$COMMON_SCRIPT"
 
-installPkg() {
+install_pkg() {
     if ! command_exists ufw; then
+        printf "%b\n" "Installing UFW..."
+
         install_packages ufw
     else
         printf "%b\n" "UFW is already installed."
     fi
 }
 
-configureUFW() {
+configure_ufw() {
     printf "%b\n" "Recommended Firewall Rules"
 
     printf "%b\n" "Disabling UFW"
@@ -31,6 +33,5 @@ configureUFW() {
     printf "%b\n" "Enabled Firewall with UFW"
 
 }
-
-installPkg
-configureUFW
+install_pkg
+configure_ufw

@@ -2,21 +2,7 @@
 
 . "$COMMON_SCRIPT"
 
-isServiceActive() {
-    case "$INIT_MANAGER" in
-    systemctl)
-        sudo "$INIT_MANAGER" is-active --quiet "$1"
-        ;;
-    rc-service)
-        sudo "$INIT_MANAGER" "$1" status --quiet
-        ;;
-    sv)
-        sudo "$INIT_MANAGER" status "$1" >/dev/null 2>&1
-        ;;
-    esac
-}
-
-setupDWM() {
+setup_dwm() {
     install_packages \
         base-devel libx11 libxinerama libxft imlib2 libxcb git unzip flameshot nwg-look \
         feh mate-polkit alsa-utils ghostty rofi xclip xarchiver thunar tumbler tldr gvfs \
@@ -25,7 +11,7 @@ setupDWM() {
         gnome-keyring flatpak networkmanager network-manager-applet noto-fonts-emoji pipewire-pulse tmux
 }
 
-makeDWM() {
+make_dwm() {
     [ ! -d "$HOME/.local/share" ] && mkdir -p "$HOME/.local/share/"
     if [ ! -d "$HOME/.local/share/dwm" ]; then
         printf "%b\n" "DWM not found, cloning repository..."
@@ -113,14 +99,14 @@ configure_backgrounds() {
 
 }
 
-setupDisplayManager() {
+setup_display_manager() {
     printf "%b\n" "Setting up Xorg"
     install_packages xorg-xinit xorg-server
     printf "%b\n" "Xorg installed successfully"
     printf "%b\n" "Setting up Display Manager"
     currentdm="none"
     for dm in gdm sddm lightdm; do
-        if command_exists "$dm" || isServiceActive "$dm"; then
+        if command_exists "$dm" || is_service_active "$dm"; then
             currentdm="$dm"
             break
         fi
@@ -141,9 +127,9 @@ setupDisplayManager() {
     fi
 }
 
-setupDisplayManager
-setupDWM
-makeDWM
+setup_display_manager
+setup_dwm
+make_dwm
 install_nerd_font
 clone_config_folders
 configure_backgrounds

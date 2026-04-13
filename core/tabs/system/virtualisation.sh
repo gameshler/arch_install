@@ -2,17 +2,25 @@
 
 . "$COMMON_SCRIPT"
 
-installQEMUDesktop() {
+check_kvm() {
+    if [ ! -e "/dev/kvm" ]; then
+        printf "%b\n" "KVM is not available. Make sure you have CPU virtualization support enabled in your BIOS/UEFI settings. Please refer https://wiki.archlinux.org/title/KVM for more information."
+    else
+        sudo usermod "$USER" -aG kvm
+    fi
+}
+
+install_qemu_desktop() {
     if ! command_exists qemu-img; then
         printf "%b\n" "Installing QEMU."
         install_packages qemu-desktop
     else
         printf "%b\n" "QEMU is already installed."
     fi
-    checkKVM
+    check_kvm
 }
 
-installQEMUEmulators() {
+install_qemu_emulators() {
     if ! "$PACKAGER" -Q | grep -q "qemu-emulators-full "; then
         printf "%b\n" "Installing QEMU-Emulators."
         install_packages qemu-emulators-full swtpm
@@ -21,7 +29,7 @@ installQEMUEmulators() {
     fi
 }
 
-installVirtManager() {
+install_virt_manager() {
     if ! command_exists virt-manager; then
         printf "%b\n" "Installing Virt-Manager."
         install_packages virt-manager
@@ -30,15 +38,7 @@ installVirtManager() {
     fi
 }
 
-checkKVM() {
-    if [ ! -e "/dev/kvm" ]; then
-        printf "%b\n" "KVM is not available. Make sure you have CPU virtualization support enabled in your BIOS/UEFI settings. Please refer https://wiki.archlinux.org/title/KVM for more information."
-    else
-        sudo usermod "$USER" -aG kvm
-    fi
-}
-
-setupLibvirt() {
+setup_libvirt() {
     printf "%b\n" "Configuring Libvirt."
 
     install_packages dnsmasq
@@ -64,17 +64,18 @@ setupLibvirt() {
 
     sudo systemctl enable --now libvirtd.service
     sudo virsh net-autostart default
-
-    checkKVM
+    check_kvm
 }
 
-installLibvirt() {
+install_libvirt() {
     if ! command_exists libvirtd; then
+        printf "%b\n" "Installing Libvirt..."
+
         install_packages libvirt dmidecode
     else
         printf "%b\n" "Libvirt is already installed."
     fi
-    setupLibvirt
+    setup_libvirt
 }
 
 main() {
@@ -87,15 +88,16 @@ main() {
     printf "%b" "Enter your choice [1-5]: "
     read -r CHOICE
     case "$CHOICE" in
-    1) installQEMUDesktop ;;
-    2) installQEMUEmulators ;;
-    3) installLibvirt ;;
-    4) installVirtManager ;;
+    1) install_qemu_desktop ;;
+    2) install_qemu_emulators ;;
+    3) install_libvirt ;;
+    4) install_virt_manager ;;
     5)
-        installQEMUDesktop
-        installQEMUEmulators
-        installLibvirt
-        installVirtManager
+        install_qemu_desktop
+        install_qemu_emulators
+        install_libvirt
+        install_virt_manager
+
         ;;
     *) printf "%b\n" "Invalid choice." && exit 1 ;;
     esac
