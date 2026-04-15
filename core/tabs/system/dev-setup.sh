@@ -22,6 +22,7 @@ install_pkgs() {
 
 main() {
     install_pkgs
+    install_packages --aur postman-bin
     printf "%b\n" "Installing Node.js v25 via nvm"
     nvm install 25
     nvm alias default 25
