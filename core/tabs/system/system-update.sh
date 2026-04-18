@@ -2,10 +2,16 @@
 
 . "$COMMON_SCRIPT"
 
-fast_update() {
-    printf "%b\n" "Installing Rate Mirrors..."
+install_rate_mirrors() {
+    if ! command_exists rate-mirrors; then
+         install_packages --aur rate-mirrors-bin
+       
+    else
+        printf "%b\n" "Rate Mirrors is already installed."
+    fi
+}
 
-    install_packages --aur rate-mirrors-bin
+fast_update() {
 
     printf "%b\n" "Generating a new list of mirrors using rate-mirrors. This process may take a few seconds..."
 
@@ -46,6 +52,8 @@ update_flatpaks() {
         flatpak update -y
     fi
 }
+
+install_rate_mirrors
 fast_update
 update_system
 update_flatpaks
