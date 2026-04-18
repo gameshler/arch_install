@@ -4,8 +4,8 @@
 
 install_rate_mirrors() {
     if ! command_exists rate-mirrors; then
-         install_packages --aur rate-mirrors-bin
-       
+        install_packages --aur rate-mirrors-bin
+
     else
         printf "%b\n" "Rate Mirrors is already installed."
     fi
@@ -22,12 +22,10 @@ fast_update() {
     dtype_local="${DTYPE:-arch}"
     echo "Using rate-mirrors with distro: $dtype_local"
 
-    if ! sudo rate-mirrors --top-mirrors-number-to-retest=5 --disable-comments --save /etc/pacman.d/mirrorlist --allow-root "$dtype_local" >/dev/null || [ ! -s "/etc/pacman.d/mirrorlist" ]; then
+    if ! sudo rate-mirrors --disable-comments --allow-root --save=/etc/pacman.d/mirrorlist "$dtype_local" --max-delay=21600 >/dev/null || [ ! -s "/etc/pacman.d/mirrorlist" ]; then
         printf "%b\n" "Rate-mirrors failed, restoring backup."
         sudo cp /etc/pacman.d/mirrorlist.bak /etc/pacman.d/mirrorlist
 
-        printf "%b\n" "Rate-mirrors failed, restoring backup."
-        sudo cp /etc/pacman.d/mirrorlist.bak /etc/pacman.d/mirrorlist
     fi
 
 }
