@@ -53,6 +53,7 @@ update_flatpaks() {
     fi
 }
 
+check_aur_helper
 install_rate_mirrors
 fast_update
 update_system
