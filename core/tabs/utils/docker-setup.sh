@@ -33,7 +33,6 @@ choose_installation() {
 install_docker() {
     printf "%b\n" "Installing Docker..."
     install_packages docker
-    startAndEnableService docker
 }
 
 install_docker_compose() {
