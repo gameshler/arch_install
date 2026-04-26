@@ -21,56 +21,78 @@ configure_nftables() {
     fi
 
     sudo WAN_IF="$WAN_IF" SSH_PORT="$SSH_PORT" bash -c '
-    cat > /etc/nftables.conf << 'EOF'
-
+    cat > /etc/nftables.conf << EOF
 #!/usr/bin/nft -f
 
-destroy table inet filter
+flush ruleset
+
 table inet filter {
+
   chain input {
-    type filter hook input priority 0;
-    policy drop;
+    type filter hook input priority 0; policy drop;
 
-    ct state invalid drop comment "drop invalid connections"
-    ct state {established, related} accept comment "allow established/related"
-    iif lo accept comment "allow loopback"
-    iif != lo ip daddr 127.0.0.1/8 drop comment "block spoofed loopback"
-    iif != lo ip6 daddr ::1/128 drop comment "block IPv6 loopback spoofing"
+    ct state invalid drop
+    ct state { established, related } accept
 
-    # Rate-limited ICMP
-    ip protocol icmp limit rate 4/second accept comment "allow ICMP"
-    meta l4proto ipv6-icmp limit rate 4/second accept comment "allow ICMPv6"
+    iif lo accept
 
-    # SSH brute-force protection
-    tcp dport $SSH_PORT ct state new meter ssh_conn_limit { ip saddr timeout 30s limit rate 6/minute } jump ssh_check
+    # loopback protection
+    iif != lo ip daddr 127.0.0.0/8 drop
+    iif != lo ip6 daddr ::1/128 drop
 
-    # Web services
-    tcp dport {80, 443} accept comment "allow HTTP/HTTPS"
+    # ICMP 
+    ip protocol icmp limit rate 10/second accept
+    ip6 nexthdr icmpv6 limit rate 10/second accept
 
-    # Libvirt (VMs)
-    iifname "virbr0" ct state {established, related, new} accept comment "allow VM traffic"
+    # SSH 
+    tcp dport $SSH_PORT ct state new limit rate 10/minute accept
 
-    # Block spoofed private IPs on external interface
-    iifname "$WAN_IF" ip saddr { 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.0/8 } drop comment "anti-spoofing"
+    # Web 
+    tcp dport {80, 443} accept
 
-    # Final logging and drop
-    log prefix "DROP: " level warn counter drop comment "log and drop"
-  }
+    # Libvirt 
+    iifname "virbr0" accept
 
-  chain ssh_check {
-    tcp dport $SSH_PORT counter accept comment "SSH accepted"
+    # anti-spoofing 
+    iifname "$WAN_IF" ip saddr {
+      10.0.0.0/8,
+      172.16.0.0/12,
+      192.168.0.0/16,
+      127.0.0.0/8
+    } drop
+
+    log prefix "DROP_INPUT " limit rate 5/second counter drop
   }
 
   chain forward {
     type filter hook forward priority 0; policy drop;
 
-    ct state {established, related} accept comment "allow forwarded replies"
-    iifname "virbr0" accept comment "allow VM forwarding"
+    ct state invalid drop
+    ct state { established, related } accept
+
+    # Docker 
+    iifname "docker0" accept
+    iifname "br-*" accept
+
+    # Libvirt VM
+    iifname "virbr0" accept
+    oifname "virbr0" accept
   }
 
   chain output {
-    type filter hook output priority 0;
-    policy accept;
+    type filter hook output priority 0; policy accept;
+  }
+}
+
+table ip nat {
+  chain postrouting {
+    type nat hook postrouting priority 100;
+
+    # Docker NAT 
+    ip saddr 172.16.0.0/12 oifname "$WAN_IF" masquerade
+
+    # Libvirt NAT
+    ip saddr 192.168.122.0/24 oifname $WAN_IF masquerade
   }
 }
 
@@ -78,25 +100,23 @@ EOF
 
 systemctl enable --now nftables
 
-    cat > /etc/sysctl.d/90-network.conf << 'EOF'
-# Do not act as a router
-net.ipv4.ip_forward = 0
-net.ipv6.conf.all.forwarding = 0
+    cat > /etc/sysctl.d/90-network.conf << EOF
+net.ipv4.ip_forward = 1
+net.ipv6.conf.all.forwarding = 1
 
-# SYN flood protection
 net.ipv4.tcp_syncookies = 1
 
-# Disable ICMP redirect
 net.ipv4.conf.all.accept_redirects = 0
 net.ipv4.conf.default.accept_redirects = 0
-net.ipv4.conf.all.secure_redirects = 0
-net.ipv4.conf.default.secure_redirects = 0
 net.ipv6.conf.all.accept_redirects = 0
 net.ipv6.conf.default.accept_redirects = 0
 
-# Do not send ICMP redirects
 net.ipv4.conf.all.send_redirects = 0
 net.ipv4.conf.default.send_redirects = 0
+
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv6.conf.all.accept_source_route = 0
+
 EOF
     sysctl --system
 '

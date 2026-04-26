@@ -15,8 +15,6 @@ install_pkg() {
 configure_ufw() {
     printf "%b\n" "Recommended Firewall Rules"
 
-    printf "%b\n" "Disabling UFW"
-    sudo ufw disable
     printf "%b\n" "Limiting Port $SSH_PORT/tcp"
     sudo ufw limit "$SSH_PORT"/tcp
     printf "%b\n" "Allowing Port 80/tcp"
@@ -33,5 +31,31 @@ configure_ufw() {
     printf "%b\n" "Enabled Firewall with UFW"
 
 }
+
+configure_sysctl() {
+    sudo bash -c '
+    cat > /etc/sysctl.d/90-network.conf << EOF
+net.ipv4.ip_forward = 1
+net.ipv6.conf.all.forwarding = 1
+
+net.ipv4.tcp_syncookies = 1
+
+net.ipv4.conf.all.accept_redirects = 0
+net.ipv4.conf.default.accept_redirects = 0
+net.ipv6.conf.all.accept_redirects = 0
+net.ipv6.conf.default.accept_redirects = 0
+
+net.ipv4.conf.all.send_redirects = 0
+net.ipv4.conf.default.send_redirects = 0
+
+net.ipv4.conf.all.accept_source_route = 0
+net.ipv6.conf.all.accept_source_route = 0
+
+EOF
+    sysctl --system
+'
+}
+
 install_pkg
 configure_ufw
+configure_sysctl
