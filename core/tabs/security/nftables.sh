@@ -92,7 +92,7 @@ table ip nat {
     ip saddr 172.16.0.0/12 oifname "$WAN_IF" masquerade
 
     # Libvirt NAT
-    ip saddr 192.168.122.0/24 oifname $WAN_IF masquerade
+    ip saddr 192.168.122.0/24 oifname "$WAN_IF" masquerade
   }
 }
 
